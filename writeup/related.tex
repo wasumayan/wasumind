@@ -1,0 +1,36 @@
+\chapter{Background and Related Work}
+\label{ch:related}
+
+Our work sits at the intersection of three research threads: policy distillation, memory architectures for sequential decision-making, and learning from imperfect demonstrations.
+Each has developed largely independently; our contribution is to study how they interact.
+
+\paragraph{Policy distillation.}
+The idea of compressing a large model's knowledge into a smaller one originated with~\citet{hinton2015distilling}, who showed that a teacher's soft output distribution carries richer signal than hard labels.
+\citet{rusu2016policy} brought this to RL, distilling DQN policies into compact students, and~\citet{parisotto2016actormimic} extended it to multi-task transfer.
+\citet{czarnecki2019distilling} studied when and why distillation fails, finding that objective choice and capacity mismatch are key failure modes.
+More recently, \citet{busbridge2025distillation} studied scaling properties of distillation in language models, finding teacher quality to be a strong predictor of student quality---a result that motivates our central question: does this finding extend to sequential decision-making under partial observability, where the student must additionally handle temporal memory?
+\citet{belkhale2023data} showed that data quality dominates other design factors in imitation learning for manipulation, providing further evidence that the quality of demonstrations may matter more than architectural sophistication.
+Our work extends this line of inquiry to POMDPs with a systematic architecture comparison and formal variance decomposition.
+
+\paragraph{Memory architectures for RL.}
+The question of which temporal architecture best handles partial observability has been studied extensively in the RL training setting.
+The POPGym benchmark~\citep{morad2023popgym} compared 13 architectures across 15 POMDP tasks and found GRU to be the strongest general-purpose choice---a finding we corroborate in the distillation setting.
+\citet{ni2022transformers} showed that simple recurrent baselines are surprisingly competitive with Transformers on many POMDPs, challenging the assumption that attention-based models dominate.
+\citet{chen2021decision} reframed RL as sequence prediction with Decision Transformer, establishing that Transformers can be effective for sequential decision-making.
+However, all these studies compare architectures trained \emph{via RL}, where the architecture's inductive bias shapes exploration and credit assignment.
+Distillation eliminates both---the teacher has already explored, and targets are available at every timestep---raising the question of whether RL-derived architecture rankings transfer to the distillation setting.
+
+\paragraph{Spectral and state space models.}
+A parallel line of work has developed structured sequence models that replace learned recurrence with mathematically-principled temporal processing.
+\citet{hazan2017learning} introduced spectral filtering for online prediction of linear dynamical systems.
+\citet{agarwal2024spectral} formalized the Spectral Transform Unit (STU) with fixed eigenvectors of a Hankel matrix and convexity guarantees for the learnable parameters.
+\citet{liu2025flashstu} proposed Flash STU with a tensordot approximation for parameter efficiency at large scale.
+S4~\citep{gu2022s4} and Mamba~\citep{gu2024mamba} take a different approach, learning their state-transition dynamics via structured parameterizations.
+We focus on STU rather than Mamba because we aim to test the \emph{fixed} spectral prior against learned dynamics (GRU/LSTM)---a cleaner comparison than learned-SSM vs learned-RNN, where both sides learn their temporal basis.
+Our discovery that the Flash STU tensordot approximation fails catastrophically at compact model scales is, to our knowledge, unreported in prior work.
+
+\paragraph{Learning from imperfect demonstrations.}
+Our finding that students frequently exceed their imperfect teachers connects to a broader literature on learning from suboptimal demonstrations.
+\citet{ross2011dagger} introduced DAgger to address the distribution shift problem in behavioral cloning---the fundamental limitation that offline-collected demonstrations may not cover the states the student encounters.
+\citet{beliaev2022ileed} showed that explicitly modeling demonstrator expertise allows learning from mixed-quality demonstrations, and~\citet{emmons2022rvs} found that simple MLPs often match fancier architectures in offline supervised RL---a finding our Ant baseline results echo.
+Our proposed mechanism (variance averaging + length-proportional loss weighting) adds a new hypothesis to this literature, though we note it requires causal testing to confirm.

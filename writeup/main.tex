@@ -1,0 +1,83 @@
+% Princeton ECE Independent Work Report
+% "Train Better Teachers, Not Fancier Students"
+% Mayan Wasu, advised by Hossein Valavi
+%
+% TO COMPILE: pdflatex main && bibtex main && pdflatex main && pdflatex main
+
+\documentclass[12pt,oneside]{report}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[numbers]{natbib}
+\usepackage{setspace}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{xspace}
+\usepackage{microtype}
+\usepackage{mathptmx}
+\onehalfspacing
+
+\newcommand{\loss}{\mathcal{L}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ie}{i.e.\xspace}
+\newcommand{\eg}{e.g.\xspace}
+\newcommand{\cf}{cf.\xspace}
+
+\newcommand{\reporttitle}{What Matters for Policy Distillation in POMDPs}
+\newcommand{\reportsubtitle}{Teacher Quality, Memory Mechanism, and Architecture Choice}
+\newcommand{\reportauthor}{Mayan Wasu}
+\newcommand{\reportadviser}{Hossein Valavi}
+\newcommand{\reportdate}{May 2026}
+\newcommand{\reportdept}{Department of Electrical and Computer Engineering}
+\newcommand{\reportuni}{Princeton University}
+
+\title{\reporttitle}
+\author{\reportauthor}
+\date{\reportdate}
+
+\begin{document}
+\pagenumbering{roman}
+
+\input{titlepage}
+\input{abstract}
+
+% PAGE 4 — Acknowledgments
+\newpage
+\thispagestyle{empty}
+\chapter*{Acknowledgments}
+I am deeply grateful to my adviser, Professor Hossein Valavi, for his guidance, patience, and insight throughout this project.
+His feedback shaped both the direction of the research and the clarity of its presentation.
+
+I thank the Princeton Research Computing group for access to the Della and Adroit high-performance computing clusters, which made the large-scale experiments in this work possible.
+Computational resources were provided through Princeton University's Department of Electrical and Computer Engineering.
+
+% PAGE 5+ — Table of Contents
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+\input{introduction}
+\input{related}
+\input{setup}
+
+\chapter{Results}
+\label{ch:results}
+\input{results_synthetic}
+\input{results_mujoco}
+
+\input{discussion}
+
+\bibliographystyle{IEEEtranN}
+\bibliography{references}
+
+\appendix
+\input{appendix}
+
+\end{document}

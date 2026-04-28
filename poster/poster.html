@@ -1,0 +1,1818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>What Matters for Policy Distillation in POMDPs — Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* 48" × 36" landscape — authored at 4608×3456px (96 DPI), JS-scaled to fit. */
+  :root{
+    --ink:#15171c; --ink-2:#2a2f38; --ink-soft:#4a5160; --ink-mute:#7a8294;
+    --rule:#d7d9de; --rule-soft:#e8eaee;
+    --paper:#fff; --paper-warm:#faf6ec; --paper-cool:#f3f5f8;
+    --header:#11202f; --header-2:#0a1622;
+    --orange:#E77500; --orange-d:#B85C00; --orange-soft:#fff1d8;
+    --teal:#1f6f7a; --green:#2f7a44; --red:#b3361f;
+    --c-gru:#1f6f7a; --c-lstm:#c47a00; --c-stu:#6c4ab4;
+    --c-stu-t:#9aa1b1; --c-transformer:#b3361f; --c-mlp:#4a5160;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#1a1d23;
+    font-family:"Source Serif 4", Charter, Georgia, serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  #stage{ position:fixed; inset:0; overflow:hidden; }
+  #poster{
+    width:4608px; height:3456px;
+    background:var(--paper);
+    position:absolute; top:0; left:0;
+    transform-origin:0 0;
+    box-shadow:0 30px 80px rgba(0,0,0,.55);
+    overflow:hidden;
+  }
+  @media print{
+    @page{ size:48in 36in; margin:0; }
+    body{ background:#fff; }
+    #stage{ position:static; display:block; overflow:visible; }
+    #poster{ transform:none !important; box-shadow:none; }
+  }
+
+  /* ========== COMPACT HEADER ========== */
+  .header{
+    background:linear-gradient(180deg,#122130 0%,#0a1623 100%);
+    color:#fff;
+    padding:26px 70px 24px;
+    position:relative;
+    border-bottom:6px solid var(--orange);
+  }
+  .h-grid{ display:grid; grid-template-columns:auto 1fr auto auto; gap:32px; align-items:center; }
+  .crest{ display:flex; align-items:center; gap:18px; }
+  .crest .shield{
+    width:64px; height:78px;
+    background:#fff; color:var(--header);
+    display:grid; place-items:center;
+    font-family:"Source Serif 4",serif; font-weight:700; font-size:42px;
+    clip-path:polygon(0 0,100% 0,100% 78%,50% 100%,0 78%);
+    line-height:1; padding-bottom:10px;
+  }
+  .crest-text{ line-height:1.15; font-family:"Inter",sans-serif; }
+  .crest-text .u{ font-size:21px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#fff; }
+  .crest-text .d{ font-size:15px; font-weight:400; color:#b9c3d2; margin-top:3px; }
+
+  .title-block h1{
+    margin:0 0 6px;
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:78px; line-height:.98; letter-spacing:-.018em; color:#fff;
+    text-wrap:balance;
+  }
+  .title-block .sub{
+    font-family:"Source Serif 4",serif; font-style:italic;
+    font-size:32px; line-height:1.1; color:#f3d6a8;
+    margin-bottom:10px; text-wrap:balance;
+  }
+  .meta{
+    font-family:"Inter",sans-serif; color:#dfe5ee;
+    font-size:18px; line-height:1.35;
+    display:flex; flex-wrap:wrap; gap:0 22px;
+  }
+  .meta b{ color:#fff; font-weight:700; }
+  .meta .sep{ color:#5d6f86; }
+  .meta .email{ color:#f3d6a8; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:16px; }
+
+  .header-stats{
+    display:flex; gap:0;
+    border-left:1px solid #2a3b50; padding-left:32px;
+  }
+  .header-stats .item{ padding:0 22px; border-right:1px solid #2a3b50; }
+  .header-stats .item:last-child{ border-right:none; }
+  .header-stats .v{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:42px; color:#fff; line-height:1;
+  }
+  .header-stats .v .u{ font-size:18px; color:#f3d6a8; margin-left:4px; }
+  .header-stats .k{
+    font-family:"Inter",sans-serif; font-size:11px; letter-spacing:.16em;
+    color:#9ca8bb; text-transform:uppercase; margin-top:6px; font-weight:700;
+  }
+
+  /* ========== TLDR ========== */
+  .tldr{
+    background:#fbf2dd;
+    border-bottom:1px solid #e7d6a8;
+    padding:14px 70px;
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:24px; align-items:center;
+  }
+  .tldr-tag{
+    font-family:"Inter",sans-serif; font-weight:900;
+    font-size:16px; letter-spacing:.22em;
+    color:#fff; background:var(--orange);
+    padding:7px 14px; border-radius:3px;
+  }
+  .tldr-text{
+    font-family:"Source Serif 4",serif;
+    font-size:26px; line-height:1.30; color:var(--ink);
+    text-wrap:balance;
+  }
+  .tldr-text b{ color:#11202f; font-weight:700; }
+  .tldr-text .pop{
+    background:linear-gradient(180deg,transparent 60%,#ffd58a 60%);
+    padding:0 4px; font-weight:600;
+  }
+
+  /* ========== BODY ========== */
+  .body{
+    padding:24px 44px 32px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    column-gap:30px;
+  }
+  .col{ display:flex; flex-direction:column; gap:18px; }
+
+  .col-head{
+    background:var(--header);
+    color:#fff;
+    padding:11px 16px;
+    border-left:6px solid var(--orange);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .col-head .nm{
+    font-family:"Inter",sans-serif; font-weight:800; font-size:23px;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .col-head .ix{
+    font-family:"JetBrains Mono",monospace; font-size:16px;
+    color:#f3d6a8; letter-spacing:.1em;
+  }
+
+  .section{ break-inside:avoid; }
+  .sec-head{
+    display:flex; align-items:baseline; gap:10px;
+    border-top:2px solid var(--ink);
+    padding-top:9px; margin-bottom:9px;
+  }
+  .sec-head .num{
+    font-family:"Inter",sans-serif; font-weight:800;
+    font-size:16px; letter-spacing:.08em; color:var(--orange);
+  }
+  .sec-head h2{
+    margin:0;
+    font-family:"Inter",sans-serif; font-weight:800;
+    font-size:28px; line-height:1.05; letter-spacing:-.005em;
+    color:var(--ink); text-transform:uppercase;
+  }
+
+  p{
+    font-family:"Source Serif 4",serif;
+    font-size:20px; line-height:1.38;
+    margin:0 0 9px; color:var(--ink-2);
+    text-wrap:pretty; hyphens:auto;
+  }
+  p strong{ color:var(--ink); font-weight:700; }
+  .lede{ font-size:22px; }
+  .lede .drop{
+    float:left;
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:54px; line-height:.85; color:var(--orange);
+    margin:4px 8px 0 0;
+  }
+
+  ul.bullets{ margin:0 0 4px; padding:0; list-style:none;
+    font-family:"Source Serif 4",serif; font-size:19px; line-height:1.34; color:var(--ink-2); }
+  ul.bullets li{ position:relative; padding-left:18px; margin-bottom:5px; text-wrap:pretty; }
+  ul.bullets li::before{
+    content:""; position:absolute; left:4px; top:10px;
+    width:6px; height:6px; background:var(--orange); border-radius:50%;
+  }
+  ul.bullets li b, ul.bullets li strong{ color:var(--ink); font-weight:700; }
+
+  ol.numbered{ margin:0; padding:0; list-style:none; counter-reset:item;
+    font-family:"Source Serif 4",serif; font-size:19px; line-height:1.34; color:var(--ink-2); }
+  ol.numbered > li{
+    counter-increment:item; position:relative;
+    padding-left:32px; margin-bottom:8px; text-wrap:pretty;
+  }
+  ol.numbered > li::before{
+    content:counter(item);
+    position:absolute; left:0; top:1px;
+    width:22px; height:22px;
+    background:var(--ink); color:#fff;
+    font-family:"Inter",sans-serif; font-weight:800; font-size:13px;
+    border-radius:3px; display:grid; place-items:center; line-height:1;
+  }
+
+  .question{
+    background:var(--paper-warm);
+    border-left:5px solid var(--orange);
+    padding:13px 18px;
+    font-family:"Source Serif 4",serif; font-style:italic;
+    font-size:22px; line-height:1.25; color:var(--ink);
+  }
+  .question .q-tag{
+    display:block;
+    font-family:"Inter",sans-serif; font-style:normal; font-weight:800;
+    font-size:12px; letter-spacing:.18em;
+    color:var(--orange-d); text-transform:uppercase; margin-bottom:4px;
+  }
+
+  .pullquote{
+    background:var(--header); color:#fff;
+    padding:16px 20px;
+    border-left:5px solid var(--orange);
+    font-family:"Source Serif 4",serif; font-weight:600;
+    font-size:26px; line-height:1.20; text-wrap:balance;
+  }
+  .pullquote::before{
+    content:"“"; font-size:50px; line-height:0;
+    color:var(--orange); margin-right:4px; vertical-align:-16px;
+  }
+  .pullquote::after{ content:"”"; color:var(--orange); margin-left:4px; }
+
+  /* tables */
+  table.data{
+    width:100%; border-collapse:collapse;
+    font-family:"Inter",sans-serif; font-size:17px;
+    background:#fff;
+  }
+  table.data thead th{
+    background:var(--ink); color:#fff;
+    padding:8px 10px; text-align:left;
+    font-weight:700; font-size:14px;
+    letter-spacing:.05em; text-transform:uppercase;
+    border-right:1px solid #2a2f38;
+  }
+  table.data thead th:last-child{ border-right:none; }
+  table.data tbody td{
+    padding:7px 10px;
+    border-bottom:1px solid var(--rule-soft);
+    color:var(--ink-2); vertical-align:middle;
+  }
+  table.data tbody tr:nth-child(even) td{ background:var(--paper-cool); }
+  table.data tbody td.num{
+    font-family:"JetBrains Mono",monospace; font-size:16px;
+    font-variant-numeric:tabular-nums;
+  }
+  table.data tbody td .arch{
+    display:inline-flex; align-items:center; gap:6px; font-weight:700; color:var(--ink);
+  }
+  td.win{ color:var(--green) !important; font-weight:700; }
+  td.lose{ color:var(--red) !important; font-weight:700; }
+  .swatch{ width:11px; height:11px; border-radius:2px; display:inline-block; }
+
+  /* ANOVA */
+  table.anova{ width:100%; border-collapse:collapse;
+    font-family:"Inter",sans-serif; font-size:17px; }
+  table.anova th{
+    text-align:left; font-weight:700; color:var(--ink);
+    padding:7px 9px;
+    border-bottom:2px solid var(--ink);
+    font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+  }
+  table.anova td{
+    padding:9px 9px; border-bottom:1px solid var(--rule-soft); vertical-align:middle;
+  }
+  table.anova td.env{
+    font-family:"Source Serif 4",serif; font-weight:600;
+    color:var(--ink); font-size:19px;
+  }
+  .pct-bar{
+    position:relative; height:18px; background:var(--paper-cool);
+    border-radius:2px; overflow:hidden; min-width:80px;
+  }
+  .pct-bar .fill{ position:absolute; left:0; top:0; bottom:0; background:var(--orange); }
+  .pct-bar.teal .fill{ background:var(--teal); }
+  .pct-bar.dark .fill{ background:var(--ink-soft); }
+  .pct-num{
+    font-family:"JetBrains Mono",monospace; font-size:15px;
+    color:var(--ink); font-weight:600; margin-top:3px;
+  }
+
+  .figure{ background:#fff; border:1px solid var(--rule); padding:8px 10px 8px; }
+  .figure.tight{ padding:5px; }
+  .figure .caption{
+    font-family:"Inter",sans-serif; font-size:15px; line-height:1.34;
+    color:var(--ink-soft); margin-top:7px; padding-top:7px;
+    border-top:1px solid var(--rule-soft); text-wrap:pretty;
+  }
+  .figure .caption b{ color:var(--ink); font-weight:700; }
+  .fig-svg{ width:100%; display:block; height:auto; }
+  .fig-title{
+    font-family:"Inter",sans-serif; font-weight:800; font-size:18px;
+    color:var(--ink); margin-bottom:5px;
+  }
+
+  .chips{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .chip{
+    background:var(--paper-warm); border:1px solid #e9d9b6;
+    padding:9px 10px 8px; border-radius:3px;
+  }
+  .chip .k{
+    font-family:"Inter",sans-serif; font-size:12px; font-weight:800;
+    letter-spacing:.12em; text-transform:uppercase;
+    color:var(--orange-d); margin-bottom:3px;
+  }
+  .chip .v{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:28px; color:var(--ink); line-height:1;
+  }
+  .chip .d{ font-family:"Inter",sans-serif; font-size:13px; color:var(--ink-soft); margin-top:3px; }
+
+  .envs{ display:grid; grid-template-columns:repeat(2,1fr); gap:7px; }
+  .env-card{ border:1px solid var(--rule); padding:7px 10px; background:#fff; }
+  .env-card .h{ font-family:"Inter",sans-serif; font-weight:800; font-size:16px; color:var(--ink); margin-bottom:2px; }
+  .env-card .h .tag{
+    display:inline-block; font-size:10px; letter-spacing:.12em;
+    background:var(--ink); color:#fff;
+    padding:1px 5px; margin-right:6px;
+    vertical-align:1px; font-weight:700;
+  }
+  .env-card .d{ font-family:"Source Serif 4",serif; font-size:15px; color:var(--ink-soft); line-height:1.28; }
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:6px 14px; margin:6px 0 0;
+    font-family:"Inter",sans-serif; font-size:14px; color:var(--ink-2);
+  }
+  .legend .item{ display:inline-flex; align-items:center; gap:5px; }
+  .legend .dot{ width:10px; height:10px; border-radius:50%; }
+  .legend .dash{ width:14px; height:0; border-top:2px dashed var(--ink-mute); }
+
+  .resulttag{
+    display:inline-block;
+    font-family:"Inter",sans-serif; font-weight:800; font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:#fff; background:var(--green);
+    padding:2px 6px; border-radius:2px; vertical-align:1px; margin-right:4px;
+  }
+  .resulttag.warn{ background:var(--red); }
+  .resulttag.note{ background:var(--ink-soft); }
+  .resulttag.amber{ background:var(--orange); }
+
+  .kbd{
+    font-family:"JetBrains Mono",monospace; font-weight:600; font-size:.92em;
+    background:var(--paper-cool); padding:1px 5px; border-radius:2px; color:var(--ink);
+  }
+  .hl{ background:linear-gradient(180deg,transparent 60%,#ffe1a8 60%); padding:0 2px; }
+
+  .footer{
+    margin-top:14px;
+    border-top:2px solid var(--ink); padding-top:8px;
+    font-family:"Inter",sans-serif; font-size:14px;
+    color:var(--ink-soft); line-height:1.4;
+  }
+  .footer code{ font-family:"JetBrains Mono",monospace; color:var(--ink); }
+
+  .render-strip{
+    border:1px solid var(--rule); padding:0; background:#fff; overflow:hidden;
+  }
+  .render-strip .row{ display:block; }
+  .render-strip .row + .row{ border-top:1px solid var(--rule-soft); }
+  .render-strip .row .lab{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 11px;
+    font-family:"Inter",sans-serif; font-size:15px;
+    color:#fff; background:var(--header);
+  }
+  .render-strip .row.worst .lab{ background:#5e2418; }
+  .render-strip .row .arch{ font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+  .render-strip .row .ret{ font-family:"JetBrains Mono",monospace; color:#f3d6a8; font-size:14px; }
+  .render-strip img{ width:100%; display:block; }
+
+  .bignum{
+    display:flex; align-items:baseline; gap:11px;
+    font-family:"Inter",sans-serif;
+  }
+  .bignum .v{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:64px; line-height:.9; color:var(--orange);
+  }
+  .bignum .l{
+    font-size:16px; line-height:1.25; color:var(--ink-2); text-wrap:pretty;
+  }
+
+  .stat-row{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:8px; margin-top:6px;
+  }
+  .stat-row .stat{
+    background:#fff; border:1px solid var(--rule); padding:8px 10px;
+  }
+  .stat-row .stat .v{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:30px; color:var(--ink); line-height:1;
+  }
+  .stat-row .stat .v .u{ font-size:14px; color:var(--ink-soft); margin-left:3px; font-weight:400; font-style:italic;}
+  .stat-row .stat .k{
+    font-family:"Inter",sans-serif; font-size:12px; letter-spacing:.12em;
+    color:var(--orange-d); text-transform:uppercase; margin-top:4px; font-weight:700;
+  }
+
+  .callout{
+    background:#fff; border:1.5px solid var(--orange);
+    padding:10px 12px;
+  }
+  .callout .h{
+    font-family:"Inter",sans-serif; font-size:13px; letter-spacing:.16em;
+    color:var(--orange-d); text-transform:uppercase; font-weight:800;
+    margin-bottom:5px;
+  }
+  .callout p{ font-size:18px; margin:0; }
+
+  /* Global architecture color legend */
+  .legend-strip{
+    background:#fff;
+    border-bottom:2px solid var(--ink);
+    padding:9px 28px;
+    display:flex; align-items:center; gap:18px;
+    font-family:"Inter",sans-serif;
+  }
+  .legend-strip .lab{
+    font-family:"Inter",sans-serif; font-weight:900;
+    font-size:12px; letter-spacing:.22em; color:var(--ink-soft);
+    text-transform:uppercase;
+    border-right:1px solid var(--rule); padding-right:18px;
+  }
+  .legend-strip .arch-key{
+    display:flex; align-items:center; gap:9px;
+    font-size:16px; font-weight:600; color:var(--ink);
+  }
+  .legend-strip .arch-key .sw{
+    width:22px; height:14px; display:inline-block;
+    border:1px solid var(--ink);
+  }
+  .legend-strip .arch-key .role{
+    font-size:13px; color:var(--ink-mute); font-weight:500; font-style:italic;
+    margin-left:2px;
+  }
+  .legend-strip .sep{ flex:1; }
+
+  /* Big pull-stat — headline finding */
+  .pullstat{
+    background:#fbf2dd;
+    border:2px solid var(--orange);
+    padding:18px 22px;
+  }
+  .pullstat .num{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:72px; line-height:1; color:var(--orange-d);
+    letter-spacing:-.02em;
+    margin-bottom:8px;
+  }
+  .pullstat .num .pct{ font-size:42px; color:var(--orange); }
+  .pullstat .body{
+    font-family:"Source Serif 4",serif; font-size:22px; line-height:1.3; color:var(--ink);
+  }
+  .pullstat .body .h{
+    font-family:"Inter",sans-serif; font-weight:900; letter-spacing:.16em;
+    font-size:13px; color:var(--orange-d); text-transform:uppercase;
+    margin-bottom:5px;
+  }
+  .pullstat .body b{ color:#11202f; }
+
+  /* Effect-size strip (architecture vs teacher) */
+  .effectstrip{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px; }
+  .effectstrip .cell{
+    background:#fff; border:1.5px solid var(--rule); padding:10px 14px;
+  }
+  .effectstrip .cell .h{
+    font-family:"Inter",sans-serif; font-weight:800; font-size:13px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .effectstrip .cell .v{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:46px; line-height:1; color:var(--ink);
+  }
+  .effectstrip .cell.dom{ background:#fbf2dd; border-color:var(--orange); }
+  .effectstrip .cell.dom .v{ color:var(--orange-d); }
+  .effectstrip .cell .k{
+    font-family:"Inter",sans-serif; font-size:13px; color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .effectstrip .barwrap{ height:18px; background:#f3f5f8; margin-top:8px; position:relative; }
+  .effectstrip .bar{ height:100%; background:var(--orange); }
+  .effectstrip .cell.dim .bar{ background:#9aa1b1; }
+
+  /* Promoted Playbook — featured */
+  .playbook-feature{
+    background:#11202f; color:#fff;
+    border:none; padding:14px 18px;
+    margin-bottom:4px;
+  }
+  .playbook-feature .ribbon{
+    display:inline-block;
+    background:var(--orange); color:#fff;
+    font-family:"Inter",sans-serif; font-weight:900;
+    font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+    padding:4px 10px; margin-bottom:8px;
+  }
+  .playbook-feature h2{
+    font-family:"Source Serif 4",serif; font-weight:700;
+    font-size:28px; color:#fff; margin:0 0 8px 0; line-height:1;
+  }
+  .playbook-feature ol{
+    margin:0; padding:0; list-style:none;
+    counter-reset:pb;
+    display:grid; grid-template-columns:1fr 1fr; gap:6px 18px;
+  }
+  .playbook-feature ol li{
+    counter-increment:pb;
+    position:relative;
+    padding-left:32px;
+    font-family:"Source Serif 4",serif; font-size:15px; line-height:1.25;
+    color:#dbdfe6;
+  }
+  .playbook-feature ol li::before{
+    content:counter(pb,decimal-leading-zero);
+    position:absolute; left:0; top:1px;
+    font-family:"JetBrains Mono",monospace; font-weight:700;
+    font-size:14px; color:var(--orange);
+  }
+  .playbook-feature ol li b, .playbook-feature ol li strong{ color:#fff; font-weight:700; }
+  .playbook-feature ol li em{ color:#f3d6a8; font-style:normal; font-weight:600; }
+
+  /* QR placeholder */
+  .qr{
+    width:88px; height:88px;
+    background:
+      conic-gradient(from 0deg at 50% 50%, #15171c 0deg 90deg, transparent 90deg 180deg, #15171c 180deg 270deg, transparent 270deg 360deg);
+    border:3px solid #15171c;
+    position:relative;
+  }
+  .qr::before, .qr::after{
+    content:""; position:absolute; width:22px; height:22px;
+    background:#fff; border:5px solid #15171c;
+  }
+  .qr::before{ top:6px; left:6px; }
+  .qr::after{ top:6px; right:6px; }
+  .qr-block{
+    display:flex; flex-direction:column; align-items:center;
+    gap:4px; font-family:"Inter",sans-serif; font-size:11px;
+    color:var(--ink-soft); letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+  }
+
+  /* MetaDrive image w/ axis labels */
+  .md-grid{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    grid-template-rows:auto 1fr;
+    gap:0;
+    border:1px solid var(--rule);
+    background:#fff;
+  }
+  .md-grid .colhdr{
+    grid-column:2 / 3;
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    background:var(--header); color:#fff;
+  }
+  .md-grid .colhdr div{
+    padding:8px 6px; text-align:center;
+    font-family:"Inter",sans-serif; font-weight:800; font-size:14px;
+    letter-spacing:.08em; text-transform:uppercase;
+    border-right:1px solid #2a3b50;
+  }
+  .md-grid .colhdr div:last-child{ border-right:none; }
+  .md-grid .rowhdr{
+    grid-column:1 / 2; grid-row:2 / 3;
+    display:grid;
+    grid-template-rows:repeat(6, 1fr);
+  }
+  .md-grid .rowhdr div{
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Inter",sans-serif; font-weight:800; font-size:15px;
+    color:#fff;
+    border-bottom:1px solid #2a3b50;
+    letter-spacing:.06em;
+  }
+  .md-grid .rowhdr div:last-child{ border-bottom:none; }
+  .md-grid .img-wrap{
+    grid-column:2 / 3; grid-row:2 / 3;
+    overflow:hidden; background:#fff;
+  }
+  .md-grid .img-wrap img{
+    width:100%; display:block;
+  }
+  .md-grid .corner{
+    grid-column:1 / 2; grid-row:1 / 2;
+    background:var(--header);
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+<article id="poster">
+
+  <!-- =============== COMPACT HEADER =============== -->
+  <header class="header">
+    <div class="h-grid">
+      <div class="crest">
+        <img src="princetonlogo.png" style="width:72px;height:72px;object-fit:contain;" alt="Princeton">
+        <div class="crest-text">
+          <div class="u">Princeton University</div>
+          <div class="d">Electrical &amp; Computer Engineering</div>
+        </div>
+      </div>
+      <div class="title-block">
+        <h1>What Matters for Policy Distillation in POMDPs</h1>
+        <div class="sub">Teacher Quality, Memory Mechanism, and Architecture Choice</div>
+        <div class="meta">
+          <span><b>Mayan Wasu</b> · Class of 2027</span>
+          <span class="sep">|</span>
+          <span><b>Advisor:</b> Prof. Hossein Valavi</span>
+          <span class="sep">|</span>
+          <span class="email">mayanwasu@princeton.edu</span></span>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="item"><div class="v">5<span class="u">×</span></div><div class="k">Architectures</div></div>
+        <div class="item"><div class="v">8<span class="u">×</span></div><div class="k">Teacher Levels</div></div>
+        <div class="item"><div class="v">16.3<span class="u">×</span></div><div class="k">Edge Speedup</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+        <div style="background:#fff;padding:6px;border:2px solid #fff;width:96px;height:96px"><img src="assets/qr.svg" alt="QR code linking to paper" style="width:100%;height:100%;display:block"/></div>
+        <div style="font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.18em;color:#f3d6a8;text-transform:uppercase;font-weight:800;text-align:center;line-height:1.3">Read paper<br/>&amp; code</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =============== TLDR =============== -->
+  <div class="tldr">
+    <div class="tldr-tag">TL;DR</div>
+    <div class="tldr-text">
+      Across <b>500+ distillation experiments</b>, <span class="pop">teacher quality explains 49–72%</span> of student return variance —
+      <b>4–16× more</b> than student architecture. But architecture matters <em>more</em> when teachers are bad (17–25% interaction).
+      Pick a good teacher first; then match architecture to task:
+      <b>GRU</b> for locomotion, <b>Transformer</b> for content-addressable recall, and
+      <b>STU / Transformer</b> for spatially-structured driving (where GRU drops to mid-pack).
+    </div>
+  </div>
+
+  <!-- =============== GLOBAL LEGEND =============== -->
+  <div class="legend-strip" aria-label="Architecture color legend used throughout the poster">
+    <div class="lab">Architectures</div>
+    <div class="arch-key"><span class="sw" style="background:#1f6f7a"></span>GRU<span class="role">locomotion</span></div>
+    <div class="arch-key"><span class="sw" style="background:#c47a00"></span>LSTM<span class="role">retention</span></div>
+    <div class="arch-key"><span class="sw" style="background:#b3361f"></span>Transformer<span class="role">recall</span></div>
+    <div class="arch-key"><span class="sw" style="background:#6c4ab4"></span>STU<span class="role">spatial · LDS</span></div>
+    <div class="arch-key"><span class="sw" style="background:#9aa1b1"></span>STU-T<span class="role">tensordot variant</span></div>
+    <div class="arch-key"><span class="sw" style="background:#4a5160"></span>MLP<span class="role">no memory</span></div>
+    <div class="sep"></div>
+    <div class="lab" style="border:none;padding:0;color:var(--orange-d)">Same colors used in every chart →</div>
+  </div>
+
+  <!-- =============== BODY =============== -->
+  <div class="body">
+
+    <!-- ====================================== COLUMN 1 ====================================== -->
+    <div class="col">
+      <div class="col-head"><div class="nm">Motivation &amp; Setup</div><div class="ix">01</div></div>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.1</span><h2>The Problem</h2></div>
+        <p class="lede"><span class="drop">D</span>eploying RL agents on robots and drones requires compressing
+          large <strong>“teacher” policies</strong> into tiny <strong>“student” models</strong> via
+          behavioral cloning. The student only sees <strong>partial observations</strong> — joint positions,
+          no velocities — and must <em>infer missing state from history</em>. Memory is no longer optional.</p>
+
+        <div class="question">
+          <span class="q-tag">Research Question</span>
+          Should you invest your engineering effort in a <em>smarter student architecture</em> —
+          or in a <em>better teacher</em>?
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.2</span><h2>Distillation Pipeline</h2></div>
+        <figure class="figure">
+          <svg class="fig-svg" viewBox="0 0 1000 440" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 Z" fill="#15171c"/>
+              </marker>
+              <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M24 0 L0 0 0 24" fill="none" stroke="#eef0f4" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="1000" height="440" fill="url(#grid)"/>
+
+            <!-- TEACHER -->
+            <g>
+              <rect x="20" y="50" width="240" height="280" rx="8" fill="#11202f"/>
+              <rect x="20" y="50" width="240" height="46" rx="8" fill="#E77500"/>
+              <rect x="20" y="78" width="240" height="18" fill="#E77500"/>
+              <text x="32" y="80" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="22" letter-spacing="2">TEACHER</text>
+              <text x="32" y="128" fill="#fff" font-family="Inter,sans-serif" font-weight="700" font-size="24">RecurrentPPO</text>
+              <text x="32" y="158" fill="#cdd6e2" font-family="Source Serif 4,serif" font-size="18">Trained in MDP</text>
+              <text x="32" y="180" fill="#cdd6e2" font-family="Source Serif 4,serif" font-size="18">(positions + velocities)</text>
+              <line x1="32" y1="196" x2="248" y2="196" stroke="#2a3b50"/>
+              <text x="32" y="218" fill="#f3d6a8" font-family="JetBrains Mono,monospace" font-size="15">17-dim state</text>
+              <text x="32" y="240" fill="#f3d6a8" font-family="JetBrains Mono,monospace" font-size="15">2M env steps</text>
+              <text x="32" y="262" fill="#f3d6a8" font-family="JetBrains Mono,monospace" font-size="15">GAE-λ + clipped PPO</text>
+              <text x="32" y="296" fill="#9aa1b1" font-family="Inter,sans-serif" font-size="13" font-style="italic">Big, slow, full state</text>
+            </g>
+
+            <!-- arrow 1 -->
+            <line x1="260" y1="190" x2="340" y2="190" stroke="#15171c" stroke-width="4" marker-end="url(#ar)"/>
+            <text x="300" y="128" fill="#15171c" font-family="Inter,sans-serif" font-size="14" font-weight="800" text-anchor="middle">ROLL OUT</text>
+            <text x="300" y="148" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" text-anchor="middle">500 episodes</text>
+
+            <!-- DEMOS -->
+            <g>
+              <rect x="340" y="80" width="220" height="220" rx="8" fill="#fff" stroke="#15171c" stroke-width="2.5"/>
+              <rect x="340" y="80" width="220" height="38" fill="#15171c"/>
+              <text x="352" y="106" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="16" letter-spacing="2">DEMO DATASET</text>
+              <text x="352" y="148" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="22">500 episodes</text>
+              <text x="352" y="178" fill="#4a5160" font-family="Source Serif 4,serif" font-size="17">positions oₜ only</text>
+              <text x="352" y="200" fill="#4a5160" font-family="Source Serif 4,serif" font-size="17">+ teacher actions a*ₜ</text>
+              <line x1="352" y1="216" x2="548" y2="216" stroke="#e8eaee"/>
+              <text x="352" y="238" fill="#b3361f" font-family="JetBrains Mono,monospace" font-size="14">velocity ⊘ masked</text>
+              <text x="352" y="260" fill="#b3361f" font-family="JetBrains Mono,monospace" font-size="14">cfrc ⊘ masked</text>
+              <text x="352" y="282" fill="#b3361f" font-family="JetBrains Mono,monospace" font-size="14">com_v ⊘ masked</text>
+            </g>
+
+            <!-- arrow 2 -->
+            <line x1="560" y1="190" x2="640" y2="190" stroke="#15171c" stroke-width="4" marker-end="url(#ar)"/>
+            <text x="600" y="128" fill="#15171c" font-family="Inter,sans-serif" font-size="14" font-weight="800" text-anchor="middle">BC LOSS</text>
+            <text x="600" y="148" fill="#7a8294" font-family="Inter,sans-serif" font-size="11" text-anchor="middle">‖π(o₁:t) − a*ₜ‖²</text>
+
+            <!-- STUDENT -->
+            <g>
+              <rect x="640" y="50" width="240" height="280" rx="8" fill="#fff" stroke="#E77500" stroke-width="4"/>
+              <rect x="640" y="50" width="240" height="46" rx="8" fill="#E77500"/>
+              <rect x="640" y="78" width="240" height="18" fill="#E77500"/>
+              <text x="652" y="80" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="22" letter-spacing="2">STUDENT</text>
+              <text x="652" y="128" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="20">GRU · LSTM</text>
+              <text x="652" y="152" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="20">STU · Transformer</text>
+              <text x="652" y="184" fill="#4a5160" font-family="Source Serif 4,serif" font-size="18">Trained in POMDP</text>
+              <text x="652" y="206" fill="#4a5160" font-family="Source Serif 4,serif" font-size="18">(positions only)</text>
+              <line x1="652" y1="222" x2="868" y2="222" stroke="#e8eaee"/>
+              <text x="652" y="244" fill="#1f6f7a" font-family="JetBrains Mono,monospace" font-size="15">d_model = 64</text>
+              <text x="652" y="266" fill="#1f6f7a" font-family="JetBrains Mono,monospace" font-size="15">2 layers</text>
+              <text x="652" y="296" fill="#9aa1b1" font-family="Inter,sans-serif" font-size="13" font-style="italic">Tiny, fast, infers state</text>
+            </g>
+
+            <!-- arrow 3 -->
+            <line x1="880" y1="190" x2="940" y2="190" stroke="#15171c" stroke-width="4" marker-end="url(#ar)"/>
+            <text x="910" y="128" fill="#15171c" font-family="Inter,sans-serif" font-size="14" font-weight="800" text-anchor="middle">DEPLOY</text>
+
+            <!-- EDGE -->
+            <g>
+              <rect x="935" y="100" width="55" height="180" rx="8" fill="#11202f"/>
+              <rect x="945" y="120" width="35" height="50" rx="3" fill="#1a2d44" stroke="#E77500" stroke-width="1.5"/>
+              <circle cx="962" cy="245" r="8" fill="#E77500"/>
+              <text x="962" y="195" fill="#cdd6e2" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" font-weight="700">µC</text>
+              <text x="962" y="270" fill="#fff" font-family="Inter,sans-serif" font-size="11" text-anchor="middle" font-weight="700">EDGE</text>
+            </g>
+
+            <!-- bottom phase ribbon -->
+            <line x1="20" y1="370" x2="980" y2="370" stroke="#d7d9de" stroke-width="1.5" stroke-dasharray="6 5"/>
+            <g font-family="Inter,sans-serif" font-size="13" font-weight="800" fill="#7a8294" text-anchor="middle" letter-spacing="1.5">
+              <text x="140" y="395">PHASE 1 · MDP</text>
+              <text x="140" y="412" font-weight="500" font-style="italic">teacher trained on full state</text>
+              <text x="450" y="395">PHASE 2 · OFFLINE BC</text>
+              <text x="450" y="412" font-weight="500" font-style="italic">student fits demos w/ memory</text>
+              <text x="780" y="395">PHASE 3 · POMDP DEPLOY</text>
+              <text x="780" y="412" font-weight="500" font-style="italic">memory closes observability gap</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 1.</b> Three-phase pipeline. A fully-observable RecurrentPPO teacher rolls out 500 demonstration episodes; velocities are stripped before behavioral cloning so the student must close the observability gap with memory.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.3</span><h2>Architectures</h2></div>
+        <table class="data">
+          <thead>
+            <tr><th>Architecture</th><th>Params</th><th>Latency</th><th>Memory mechanism</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-gru)"></span>GRU</span></td>
+                <td class="num">51 K</td><td class="num">1.26 ms</td><td>Learned gating</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-lstm)"></span>LSTM</span></td>
+                <td class="num">68 K</td><td class="num">1.33 ms</td><td>Gating + cell state</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-transformer)"></span>Transformer</span></td>
+                <td class="num">232 K</td><td class="num">3.36 ms</td><td>Attention lookup</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-stu)"></span>STU (Spectral)</span></td>
+                <td class="num">338 K</td><td class="num">4.38 ms</td><td>Fixed Hankel filters</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-mlp)"></span>MLP <span style="color:var(--ink-mute);font-weight:500">(no memory)</span></span></td>
+                <td class="num">5 K</td><td class="num">0.10 ms</td><td>None</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:16px;color:var(--ink-soft);margin-top:6px"><em>All recurrent students sized to <span class="kbd">d_model = 64</span>, 2 layers — a compact, edge-feasible regime.</em></p>
+
+        <figure class="figure" style="margin-top:8px">
+          <div class="fig-title">How each architecture remembers · cartoon view</div>
+          <svg class="fig-svg" viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 Z" fill="#15171c"/>
+              </marker>
+            </defs>
+            <!-- GRU -->
+            <g transform="translate(0 0)">
+              <rect x="10" y="10" width="480" height="175" fill="#fff" stroke="#1f6f7a" stroke-width="2.5"/>
+              <rect x="10" y="10" width="480" height="32" fill="#1f6f7a"/>
+              <text x="22" y="33" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" letter-spacing="2">GRU · GATED RECURRENT</text>
+              <g transform="translate(40 65)">
+                <rect x="0"   y="30" width="54" height="40" rx="5" fill="#f3f5f8" stroke="#15171c"/>
+                <text x="27"  y="55" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">h_{t-1}</text>
+                <line x1="54" y1="50" x2="108" y2="50" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <circle cx="148" cy="50" r="30" fill="#fff1d8" stroke="#E77500" stroke-width="2.5"/>
+                <text x="148" y="46" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="11">UPDATE</text>
+                <text x="148" y="60" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="11">+ RESET</text>
+                <line x1="178" y1="50" x2="232" y2="50" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <rect x="232" y="30" width="54" height="40" rx="5" fill="#dff0d8" stroke="#15171c"/>
+                <text x="259" y="55" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700">h_t</text>
+                <line x1="148" y1="-2" x2="148" y2="18" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <text x="148" y="-6" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="12">o_t</text>
+                <line x1="259" y1="70" x2="259" y2="95" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <text x="259" y="108" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="12">a_t</text>
+              </g>
+              <text x="22" y="160" fill="#1f6f7a" font-family="Inter,sans-serif" font-size="14" font-weight="700" font-style="italic">O(1) memory — fixed-size hidden state, ideal for control</text>
+            </g>
+            <!-- LSTM -->
+            <g transform="translate(510 0)">
+              <rect x="0" y="10" width="480" height="175" fill="#fff" stroke="#c47a00" stroke-width="2.5"/>
+              <rect x="0" y="10" width="480" height="32" fill="#c47a00"/>
+              <text x="12" y="33" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" letter-spacing="2">LSTM · CELL + HIDDEN</text>
+              <g transform="translate(20 60)">
+                <rect x="0"   y="15" width="58" height="32" rx="4" fill="#fff1d8" stroke="#15171c"/>
+                <text x="29"  y="36" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">c_{t-1}</text>
+                <rect x="0"   y="58" width="58" height="32" rx="4" fill="#f3f5f8" stroke="#15171c"/>
+                <text x="29"  y="79" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">h_{t-1}</text>
+                <rect x="100" y="30" width="180" height="60" rx="6" fill="#fff" stroke="#c47a00" stroke-width="2.5"/>
+                <text x="190" y="54" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="13">forget · input</text>
+                <text x="190" y="72" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="13">output gates</text>
+                <line x1="58" y1="31"  x2="100" y2="50" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <line x1="58" y1="74"  x2="100" y2="75" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <rect x="322" y="15"  width="58" height="32" rx="4" fill="#dff0d8" stroke="#15171c"/>
+                <text x="351" y="36" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">c_t</text>
+                <rect x="322" y="58"  width="58" height="32" rx="4" fill="#dff0d8" stroke="#15171c"/>
+                <text x="351" y="79" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">h_t</text>
+                <line x1="280" y1="50"  x2="322" y2="31" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <line x1="280" y1="75"  x2="322" y2="74" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <line x1="190" y1="-2"  x2="190" y2="28" stroke="#15171c" stroke-width="2" marker-end="url(#ar2)"/>
+                <text x="190" y="-6" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="12">o_t</text>
+              </g>
+              <text x="12" y="160" fill="#c47a00" font-family="Inter,sans-serif" font-size="14" font-weight="700" font-style="italic">Separate cell state for long-range information</text>
+            </g>
+            <!-- Transformer -->
+            <g transform="translate(0 200)">
+              <rect x="10" y="0" width="480" height="175" fill="#fff" stroke="#b3361f" stroke-width="2.5"/>
+              <rect x="10" y="0" width="480" height="32" fill="#b3361f"/>
+              <text x="22" y="23" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" letter-spacing="2">TRANSFORMER · ATTENTION</text>
+              <g transform="translate(40 50)">
+                <g font-family="JetBrains Mono,monospace" font-size="12" font-weight="700">
+                  <rect x="0"   y="30" width="44" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="22"  y="50" text-anchor="middle">o₁</text>
+                  <rect x="52"  y="30" width="44" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="74"  y="50" text-anchor="middle">o₂</text>
+                  <rect x="104" y="30" width="44" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="126" y="50" text-anchor="middle">…</text>
+                  <rect x="156" y="30" width="44" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="178" y="50" text-anchor="middle">oₜ₋₁</text>
+                  <rect x="208" y="30" width="44" height="32" fill="#fff1d8" stroke="#E77500" stroke-width="2"/><text x="230" y="50" text-anchor="middle">oₜ</text>
+                </g>
+                <g stroke="#b3361f" stroke-width="1.5" fill="none" opacity=".7">
+                  <path d="M230 70 Q 200 105 22 78"/>
+                  <path d="M230 70 Q 220 105 74 78"/>
+                  <path d="M230 70 Q 240 105 178 78"/>
+                  <path d="M230 70 Q 230 105 230 78"/>
+                </g>
+                <text x="126" y="122" fill="#b3361f" font-family="Inter,sans-serif" font-weight="800" font-size="12" text-anchor="middle">softmax(QKᵀ) · V — query every past step</text>
+              </g>
+              <text x="22" y="160" fill="#b3361f" font-family="Inter,sans-serif" font-size="14" font-weight="700" font-style="italic">O(T) memory — best for content-addressable lookup</text>
+            </g>
+            <!-- STU -->
+            <g transform="translate(510 200)">
+              <rect x="0" y="0" width="480" height="175" fill="#fff" stroke="#6c4ab4" stroke-width="2.5"/>
+              <rect x="0" y="0" width="480" height="32" fill="#6c4ab4"/>
+              <text x="12" y="23" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" letter-spacing="2">STU · SPECTRAL FILTERS</text>
+              <g transform="translate(20 44)">
+                <text x="0" y="0" font-family="Inter,sans-serif" font-weight="700" font-size="12" fill="#15171c">Input sequence o₁∶ₜ</text>
+                <g font-family="JetBrains Mono,monospace" font-size="10">
+                  <rect x="0"   y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="30"  y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="60"  y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="90"  y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="120" y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="150" y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                  <rect x="180" y="8" width="30" height="22" fill="#f3f5f8" stroke="#15171c"/>
+                </g>
+                <text x="0" y="50" font-family="Inter,sans-serif" font-weight="700" font-size="12" fill="#6c4ab4">Convolve with fixed Hankel eigenfilters φ_k</text>
+                <g transform="translate(0 60)" stroke="#6c4ab4" stroke-width="2" fill="none">
+                  <path d="M0 24 Q 24 -2 48 24 T 96 24 T 144 24 T 192 24"/>
+                  <path d="M0 24 Q 16 10 32 24 T 64 24 T 96 24 T 128 24 T 160 24 T 192 24" opacity=".7"/>
+                  <path d="M0 24 Q 12 12 24 24 T 48 24 T 72 24 T 96 24 T 120 24 T 144 24 T 168 24 T 192 24" opacity=".5"/>
+                </g>
+                <text x="230" y="86" font-family="Inter,sans-serif" font-weight="800" font-size="22" fill="#6c4ab4">→</text>
+                <text x="272" y="78"  font-family="Inter,sans-serif" font-weight="800" font-size="12" fill="#15171c">linear projection</text>
+                <text x="272" y="95"  font-family="JetBrains Mono,monospace" font-size="12" fill="#15171c">M · Σ_k (φ_k ∗ o)</text>
+              </g>
+              <text x="12" y="160" fill="#6c4ab4" font-family="Inter,sans-serif" font-size="14" font-weight="700" font-style="italic">Fixed Hankel filters — provably models linear dynamics</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 2.</b> Each architecture maintains memory differently. <b>GRU/LSTM</b> compress history into a fixed hidden state; <b>Transformer</b> attends to the entire past at every step; <b>STU</b> convolves with fixed spectral filters and projects.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.3b</span><h2>Briefly · What is PPO?</h2></div>
+        <p style="font-size:18px"><strong>PPO (Proximal Policy Optimization)</strong> trains the <em>teacher</em>: roll out π<sub>θ</sub>, then update toward high-advantage actions while <em>clipping</em> so the new policy can't drift too far. <strong>RecurrentPPO</strong> adds a GRU/LSTM so the teacher itself can solve POMDPs — yielding strong, history-aware demos for the student to imitate.</p>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.4</span><h2>Environments &amp; Protocol</h2></div>
+        <div class="envs">
+          <div class="env-card"><div class="h"><span class="tag">A</span>MuJoCo POMDP</div>
+            <div class="d">HalfCheetah &amp; Ant — velocity channels removed; 8 teacher quality levels.</div></div>
+          <div class="env-card"><div class="h"><span class="tag">B</span>MetaDrive</div>
+            <div class="d">Autonomous driving with 72-laser lidar (91-dim); rich spatial observations.</div></div>
+          <div class="env-card"><div class="h"><span class="tag">C</span>T-Maze</div>
+            <div class="d">Synthetic <em>retention</em> — hold a 1-bit hint over <em>L ∈ {10,50,100,200}</em> steps.</div></div>
+          <div class="env-card"><div class="h"><span class="tag">D</span>CopyTask</div>
+            <div class="d">Synthetic <em>recall</em> — replay <em>N ∈ {5,10,20}</em> tokens after a delay.</div></div>
+        </div>
+        <div class="chips" style="margin-top:9px">
+          <div class="chip"><div class="k">Demos</div><div class="v">500</div><div class="d">episodes / cond.</div></div>
+          <div class="chip"><div class="k">Seeds</div><div class="v">3 – 5</div><div class="d">student seeds</div></div>
+          <div class="chip"><div class="k">Teacher levels</div><div class="v">8</div><div class="d">200K → 2M ± noise</div></div>
+          <div class="chip"><div class="k">d_model</div><div class="v">64</div><div class="d">edge-feasible</div></div>
+        </div>
+      </section>
+
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.6</span><h2>Contributions</h2></div>
+        <ol class="numbered" style="font-size:16px">
+          <li><strong>Variance decomposition</strong> across 500+ runs: teacher η² ≈ <strong>50–72%</strong> vs architecture η² ≈ <strong>5–14%</strong>.</li>
+          <li><strong>Memory taxonomy</strong> separating <em>retention</em>, <em>recall</em>, and <em>state inference</em> — each with a different architectural winner.</li>
+          <li><strong>Flash-STU tensordot regression</strong> at <span class="kbd">d=64</span>: 52× worse MSE than full STU; effectively random on every distillation task. <em>Unreported in prior work.</em></li>
+          <li><strong>JEPA null result</strong> across 4 archs × 3 envs and a 6-value λ sweep on LDS.</li>
+          <li><strong>SpectraLDS deployment path</strong>: <strong>16.3× edge speedup</strong> over full STU at 0.04% reconstruction error.</li>
+        </ol>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§1.7</span><h2>How It Works · Three-Phase Pipeline</h2></div>
+        <p style="font-size:15px"><strong>Phase 1 — Train a powerful teacher.</strong> We train a large RecurrentPPO agent with <em>full</em> access to the environment (positions + velocities). It learns through millions of timesteps of trial and error. This teacher is too big for real-time deployment, but it knows how to act.</p>
+        <p style="font-size:15px"><strong>Phase 2 — Record and compress.</strong> We record 500 episodes of the teacher acting. Crucially, we <em>strip the velocity channels</em> — the student only sees joint positions. The student trains via behavioral cloning: minimize the squared error between its actions and the teacher's at every timestep.</p>
+        <div style="background:var(--paper-warm);border:1px solid #e9d9b6;padding:10px 14px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--ink);line-height:1.5;margin:6px 0">
+          <span style="color:var(--orange-d);font-weight:700">L<sub>BC</sub></span>(θ) = Σ<sub>episodes</sub> Σ<sub>t=1..T</sub> ‖ π<sub>θ</sub>(o<sub>1:t</sub>) − a*<sub>t</sub> ‖²
+        </div>
+        <p style="font-size:13px;color:var(--ink-soft);margin-top:3px"><em>Longer episodes contribute more gradient signal. Successful (longer) episodes are implicitly upweighted — the student learns more from the teacher's best behavior.</em></p>
+        <p style="font-size:15px"><strong>Phase 3 — Deploy at the edge.</strong> The tiny student (51K–338K params) runs in real-time. It sees only positions and must <strong>infer velocities from past observations</strong> — this is why temporal memory matters.</p>
+        <p style="font-size:14px;color:var(--ink-soft)"><strong>Key insight:</strong> Distillation is <em>supervised learning</em>, not RL. The teacher already explored; the student just fits a function. This is why teacher quality matters more than architecture.</p>
+      </section>
+
+      
+
+
+      <div style="border-top:2px solid var(--rule);padding-top:10px;margin-top:12px">
+        <p style="font-size:13px;color:var(--ink-soft)"><strong style="color:var(--ink)">Acknowledgements.</strong> I thank <strong style="color:var(--ink)">Prof. Hossein Valavi</strong> for his guidance throughout this project, and the <strong style="color:var(--ink)">Princeton Research Computing</strong> group for access to the Della and Adroit clusters.</p>
+      </div>
+
+    </div>
+
+
+    <!-- ====================================== COLUMN 2 ====================================== -->
+    <div class="col">
+      <div class="col-head"><div class="nm">Central Finding · Teacher Dominates</div><div class="ix">02</div></div>
+
+      <!-- HEADLINE PULL-STAT -->
+      <div style="background:#fbf2dd;border:2px solid var(--orange);padding:14px 20px">
+        <p style="margin:0;font-size:22px;line-height:1.35;color:var(--ink)"><span style="font-family:'Inter',sans-serif;font-weight:900;font-size:13px;letter-spacing:.16em;color:var(--orange-d);text-transform:uppercase">The headline finding</span><br><span style="font-family:'Source Serif 4',serif;font-size:52px;font-weight:700;color:var(--orange-d);line-height:1">49–72%</span> of variance in student return is explained by <strong style="color:#11202f">teacher quality</strong> — <strong style="color:#11202f">4–16× more</strong> than architecture choice (η² ≈ 5–14%). <em>Pick the teacher first.</em></p>
+      </div>
+
+      <!-- Effect-size comparison -->
+      <div class="effectstrip">
+        <div class="cell dom">
+          <div class="h">Teacher η² (variance explained)</div>
+          <div class="v">61<span style="font-size:30px;color:var(--orange-d);font-weight:600">%</span></div>
+          <div class="barwrap"><div class="bar" style="width:88%"></div></div>
+          <div class="k">pooled across MuJoCo + MetaDrive</div>
+        </div>
+        <div class="cell dim">
+          <div class="h">Architecture η²</div>
+          <div class="v">9<span style="font-size:30px;color:#7a8294;font-weight:600">%</span></div>
+          <div class="barwrap"><div class="bar" style="width:13%"></div></div>
+          <div class="k">GRU vs LSTM vs Transformer vs STU</div>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.1</span><h2>Students Track Teachers</h2></div>
+
+        <figure class="figure">
+          <div class="fig-title">Student return vs. teacher return — MuJoCo POMDPs</div>
+          <svg class="fig-svg" viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid2" width="50" height="50" patternUnits="userSpaceOnUse">
+                <path d="M50 0 L0 0 0 50" fill="none" stroke="#eef0f4" stroke-width="1"/>
+              </pattern>
+            </defs>
+
+            <!-- HalfCheetah -->
+            <g transform="translate(40 20)">
+              <text x="200" y="0" fill="#15171c" font-family="Inter,sans-serif" font-weight="800" font-size="18" text-anchor="middle">HalfCheetah-POMDP</text>
+              <g transform="translate(0 14)">
+                <rect x="0" y="0" width="400" height="340" fill="url(#grid2)"/>
+                <line x1="0" y1="340" x2="400" y2="340" stroke="#15171c" stroke-width="2"/>
+                <line x1="0" y1="0"   x2="0"   y2="340" stroke="#15171c" stroke-width="2"/>
+                <line x1="0" y1="340" x2="340" y2="0"   stroke="#7a8294" stroke-width="1.5" stroke-dasharray="6 5"/>
+                <text x="320" y="22" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" font-style="italic">y = x</text>
+
+                <g fill="#1f6f7a" opacity=".82">
+                  <circle cx="60"  cy="282" r="8"/><circle cx="120" cy="240" r="8"/>
+                  <circle cx="180" cy="187" r="8"/><circle cx="240" cy="136" r="8"/>
+                  <circle cx="300" cy="85"  r="8"/><circle cx="350" cy="42"  r="8"/>
+                </g>
+                <g fill="#c47a00" opacity=".82">
+                  <circle cx="62"  cy="288" r="8"/><circle cx="122" cy="244" r="8"/>
+                  <circle cx="182" cy="197" r="8"/><circle cx="244" cy="146" r="8"/>
+                  <circle cx="298" cy="94"  r="8"/><circle cx="348" cy="53"  r="8"/>
+                </g>
+                <g fill="#6c4ab4" opacity=".78">
+                  <circle cx="58"  cy="294" r="8"/><circle cx="118" cy="252" r="8"/>
+                  <circle cx="178" cy="204" r="8"/><circle cx="238" cy="160" r="8"/>
+                  <circle cx="296" cy="105" r="8"/><circle cx="346" cy="63"  r="8"/>
+                </g>
+                <g fill="#b3361f" opacity=".82">
+                  <circle cx="56"  cy="300" r="8"/><circle cx="116" cy="260" r="8"/>
+                  <circle cx="176" cy="214" r="8"/><circle cx="236" cy="168" r="8"/>
+                  <circle cx="294" cy="118" r="8"/><circle cx="346" cy="73"  r="8"/>
+                </g>
+
+                <g stroke="#11202f" stroke-width="2" fill="none">
+                  <path d="M40 360 L360 360"/><path d="M40 355 L40 365"/><path d="M360 355 L360 365"/>
+                </g>
+                <text x="200" y="382" fill="#11202f" font-family="Inter,sans-serif" font-weight="800" font-size="13" text-anchor="middle">HORIZONTAL = TEACHER EFFECT</text>
+
+                <g stroke="#E77500" stroke-width="2" fill="none">
+                  <path d="M-30 85 L-30 145"/><path d="M-35 85 L-25 85"/><path d="M-35 145 L-25 145"/>
+                </g>
+                <text x="-50" y="120" fill="#E77500" font-family="Inter,sans-serif" font-weight="800" font-size="11" text-anchor="middle" transform="rotate(-90 -50 120)">VERTICAL = ARCH</text>
+
+                <text x="200" y="412" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle">Teacher Return (cumulative reward / episode)</text>
+                <text x="-42" y="170" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle" transform="rotate(-90 -42 170)">Student Return (cum. reward / ep.)</text>
+
+                <g font-family="JetBrains Mono,monospace" font-size="12" fill="#4a5160">
+                  <text x="0"   y="354" text-anchor="middle">0</text>
+                  <text x="100" y="354" text-anchor="middle">500</text>
+                  <text x="200" y="354" text-anchor="middle">1000</text>
+                  <text x="300" y="354" text-anchor="middle">1500</text>
+                  <text x="400" y="354" text-anchor="middle">2000</text>
+                  <text x="-6"  y="343" text-anchor="end">0</text>
+                  <text x="-6"  y="258" text-anchor="end">500</text>
+                  <text x="-6"  y="173" text-anchor="end">1000</text>
+                  <text x="-6"  y="88"  text-anchor="end">1500</text>
+                  <text x="-6"  y="6"   text-anchor="end">2000</text>
+                </g>
+              </g>
+            </g>
+
+            <!-- Ant -->
+            <g transform="translate(560 20)">
+              <text x="200" y="0" fill="#15171c" font-family="Inter,sans-serif" font-weight="800" font-size="18" text-anchor="middle">Ant-POMDP</text>
+              <g transform="translate(0 14)">
+                <rect x="0" y="0" width="400" height="340" fill="url(#grid2)"/>
+                <line x1="0" y1="340" x2="400" y2="340" stroke="#15171c" stroke-width="2"/>
+                <line x1="0" y1="0"   x2="0"   y2="340" stroke="#15171c" stroke-width="2"/>
+                <line x1="0" y1="340" x2="340" y2="0"   stroke="#7a8294" stroke-width="1.5" stroke-dasharray="6 5"/>
+                <text x="320" y="22" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" font-style="italic">y = x</text>
+
+                <g fill="#1f6f7a" opacity=".82">
+                  <circle cx="80"  cy="255" r="8"/><circle cx="140" cy="200" r="8"/>
+                  <circle cx="200" cy="153" r="8"/><circle cx="260" cy="102" r="8"/>
+                  <circle cx="320" cy="50"  r="8"/><circle cx="370" cy="16"  r="8"/>
+                </g>
+                <g fill="#c47a00" opacity=".82">
+                  <circle cx="84"  cy="263" r="8"/><circle cx="144" cy="214" r="8"/>
+                  <circle cx="204" cy="164" r="8"/><circle cx="262" cy="114" r="8"/>
+                  <circle cx="318" cy="63"  r="8"/><circle cx="368" cy="29"  r="8"/>
+                </g>
+                <g fill="#6c4ab4" opacity=".78">
+                  <circle cx="78"  cy="272" r="8"/><circle cx="138" cy="222" r="8"/>
+                  <circle cx="198" cy="177" r="8"/><circle cx="258" cy="126" r="8"/>
+                  <circle cx="316" cy="76"  r="8"/><circle cx="366" cy="40"  r="8"/>
+                </g>
+                <g fill="#b3361f" opacity=".82">
+                  <circle cx="76"  cy="284" r="8"/><circle cx="136" cy="234" r="8"/>
+                  <circle cx="196" cy="187" r="8"/><circle cx="256" cy="138" r="8"/>
+                  <circle cx="314" cy="88"  r="8"/><circle cx="364" cy="49"  r="8"/>
+                </g>
+
+                <text x="200" y="412" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle">Teacher Return (cumulative reward / episode)</text>
+                <text x="-42" y="170" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle" transform="rotate(-90 -42 170)">Student Return (cum. reward / ep.)</text>
+
+                <g font-family="JetBrains Mono,monospace" font-size="12" fill="#4a5160">
+                  <text x="0"   y="354" text-anchor="middle">0</text>
+                  <text x="100" y="354" text-anchor="middle">500</text>
+                  <text x="200" y="354" text-anchor="middle">1000</text>
+                  <text x="300" y="354" text-anchor="middle">1500</text>
+                  <text x="400" y="354" text-anchor="middle">2000+</text>
+                  <text x="-6"  y="343" text-anchor="end">0</text>
+                  <text x="-6"  y="258" text-anchor="end">500</text>
+                  <text x="-6"  y="173" text-anchor="end">1000</text>
+                  <text x="-6"  y="88"  text-anchor="end">1500</text>
+                  <text x="-6"  y="6"   text-anchor="end">2000</text>
+                </g>
+              </g>
+            </g>
+          </svg>
+
+          <div class="legend">
+            <span class="item"><span class="dot" style="background:#1f6f7a"></span>GRU</span>
+            <span class="item"><span class="dot" style="background:#c47a00"></span>LSTM</span>
+            <span class="item"><span class="dot" style="background:#6c4ab4"></span>STU</span>
+            <span class="item"><span class="dot" style="background:#b3361f"></span>Transformer</span>
+            <span class="item"><span class="dash"></span>y = x perfect distillation</span>
+          </div>
+
+          <div class="caption"><b>Figure 3.</b> Each marker is one (architecture, teacher) condition averaged over 3 seeds. <b>Horizontal spread (teacher) ≫ vertical spread (architecture).</b> Architecture choice rotates the cluster but never crosses lanes.</div>
+        </figure>
+      </section>
+
+      <div class="pullquote">The teacher is the signal; the architecture is just the antenna.</div>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.2</span><h2>Variance Decomposition (ANOVA, η²)</h2></div>
+        <table class="anova">
+          <thead><tr><th style="width:22%">Environment</th><th>Teacher</th><th>Architecture</th><th>Interaction</th></tr></thead>
+          <tbody>
+            <tr><td class="env">HalfCheetah</td>
+              <td><div class="pct-bar"><div class="fill" style="width:71.9%"></div></div><div class="pct-num">71.9%</div></td>
+              <td><div class="pct-bar teal"><div class="fill" style="width:4.6%"></div></div><div class="pct-num">4.6%</div></td>
+              <td><div class="pct-bar dark"><div class="fill" style="width:17.3%"></div></div><div class="pct-num">17.3%</div></td>
+            </tr>
+            <tr><td class="env">Ant</td>
+              <td><div class="pct-bar"><div class="fill" style="width:49.1%"></div></div><div class="pct-num">49.1%</div></td>
+              <td><div class="pct-bar teal"><div class="fill" style="width:11.0%"></div></div><div class="pct-num">11.0%</div></td>
+              <td><div class="pct-bar dark"><div class="fill" style="width:25.2%"></div></div><div class="pct-num">25.2%</div></td>
+            </tr>
+            <tr><td class="env">MetaDrive</td>
+              <td><div class="pct-bar"><div class="fill" style="width:58.3%"></div></div><div class="pct-num">58.3%</div></td>
+              <td><div class="pct-bar teal"><div class="fill" style="width:14.1%"></div></div><div class="pct-num">14.1%</div></td>
+              <td><div class="pct-bar dark"><div class="fill" style="width:19.7%"></div></div><div class="pct-num">19.7%</div></td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin-top:6px"><strong>Teacher η² is 4–16× larger than architecture η²</strong>. The interaction term (17–25%) tells us <em>when</em> architecture matters — it grows precisely when teachers are weak.</p>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.3</span><h2>Teacher Quality Sweep · Real Numbers</h2></div>
+        <figure class="figure" style="zoom:0.85">
+          <div class="fig-title">Ant-POMDP · 8 teacher conditions × 4 students (3 seeds)</div>
+          <table class="data" style="font-size:13px">
+            <thead>
+              <tr><th>Teacher (steps · noise)</th><th>Teach.</th><th>GRU</th><th>LSTM</th><th>STU</th><th>Transf.</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>200K · clean</td>            <td class="num">647</td><td class="num win">894</td><td class="num">847</td><td class="num">861</td><td class="num">879</td></tr>
+              <tr><td>200K · σ=0.3</td>           <td class="num">216</td><td class="num win">961</td><td class="num">952</td><td class="num">883</td><td class="num">961</td></tr>
+              <tr><td>500K · clean</td>            <td class="num">963</td><td class="num">1112</td><td class="num win">1121</td><td class="num">1050</td><td class="num">1068</td></tr>
+              <tr><td>500K · σ=0.3</td>           <td class="num">251</td><td class="num">1079</td><td class="num win">1161</td><td class="num">1083</td><td class="num">1090</td></tr>
+              <tr><td>1M · clean</td>              <td class="num">1424</td><td class="num win">1745</td><td class="num">1692</td><td class="num">1356</td><td class="num">1657</td></tr>
+              <tr><td>1M · σ=0.3</td>             <td class="num">317</td><td class="num win">1145</td><td class="num">945</td><td class="num">1134</td><td class="num">962</td></tr>
+              <tr><td>2M · clean</td>              <td class="num">439</td><td class="num win">1783</td><td class="num">1238</td><td class="num lose">496</td><td class="num">858</td></tr>
+              <tr><td>2M · σ=0.3</td>             <td class="num">210</td><td class="num">1921</td><td class="num win">1944</td><td class="num">1359</td><td class="num">1091</td></tr>
+            </tbody>
+          </table>
+          <div class="caption"><b>Table 1.</b> GRU consistently leads or co-leads. Students <em>routinely exceed</em> imperfect teachers because BC averages over a high-variance demo set with rare strong rollouts.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.4</span><h2>Why Students Exceed Teachers</h2></div>
+        <p>The Ant 2M teacher scores <strong>439</strong>; demos range <strong>17 → 1928</strong> (σ=368, ~15% of demos &gt; 800). BC's per-step MSE <em>implicitly upweights longer, more successful episodes</em> — the student inherits a return-biased distribution and generalizes beyond it.</p>
+        <div class="bignum">
+          <div class="v">1.23×</div>
+          <div class="l"><b>median student / teacher ratio</b> with stable teachers; ratio grows with teacher variance.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.5</span><h2>Cross-Environment Mean Return</h2></div>
+        <figure class="figure">
+          <div class="fig-title">Overall mean return across MuJoCo POMDPs (all teachers, 3 seeds)</div>
+          <svg class="fig-svg" viewBox="0 0 1000 282" xmlns="http://www.w3.org/2000/svg">
+            <g font-family="Inter,sans-serif" font-size="14">
+              <g stroke="#eef0f4" stroke-width="1">
+                <line x1="180" y1="20" x2="180" y2="280"/>
+                <line x1="340" y1="20" x2="340" y2="280"/>
+                <line x1="500" y1="20" x2="500" y2="280"/>
+                <line x1="660" y1="20" x2="660" y2="280"/>
+                <line x1="820" y1="20" x2="820" y2="280"/>
+                <line x1="980" y1="20" x2="980" y2="280"/>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="12" fill="#4a5160" text-anchor="middle">
+                <text x="180" y="296">0</text><text x="340" y="296">300</text>
+                <text x="500" y="296">600</text><text x="660" y="296">900</text>
+                <text x="820" y="296">1200</text><text x="980" y="296">1500</text>
+              </g>
+
+              <text x="170" y="48" text-anchor="end" fill="#15171c" font-weight="700">GRU</text>
+              <rect x="180" y="32" width="652" height="26" fill="#1f6f7a"/>
+              <text x="826" y="50" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">1,222</text>
+              <text x="845" y="50" fill="#2f7a44" font-family="Inter,sans-serif" font-size="11" font-weight="800">★ BEST</text>
+
+              <text x="170" y="92" text-anchor="end" fill="#15171c" font-weight="700">LSTM</text>
+              <rect x="180" y="76" width="591" height="26" fill="#c47a00"/>
+              <text x="765" y="94" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">1,108</text>
+
+              <text x="170" y="136" text-anchor="end" fill="#15171c" font-weight="700">Transformer</text>
+              <rect x="180" y="120" width="568" height="26" fill="#b3361f"/>
+              <text x="742" y="138" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">1,066</text>
+
+              <text x="170" y="180" text-anchor="end" fill="#15171c" font-weight="700">STU (full)</text>
+              <rect x="180" y="164" width="534" height="26" fill="#6c4ab4"/>
+              <text x="708" y="182" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">1,001</text>
+
+              <text x="170" y="224" text-anchor="end" fill="#15171c" font-weight="700">STU-T</text>
+              <rect x="180" y="208" width="225" height="26" fill="#9aa1b1"/>
+              <text x="415" y="226" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="13">421</text>
+
+              <text x="170" y="268" text-anchor="end" fill="#15171c" font-weight="700">MLP (no memory)</text>
+              <rect x="180" y="252" width="62" height="26" fill="#4a5160"/>
+              <text x="252" y="270" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="13">115</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 4.</b> Pooled across all teacher levels and MuJoCo envs. The recurrent-vs-spectral gap is small (1,222 vs 1,001); the <b>memory-vs-no-memory</b> gap is the order of magnitude (1,222 vs 115).</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§2.6</span><h2>Parameter-Matched Comparison</h2></div>
+        <p><strong>Is GRU's lead just a parameter advantage?</strong> No. We re-ran GRU at 312K params (matched to STU's 338K) on Ant.</p>
+        <table class="data" style="font-size:14px">
+          <thead><tr><th>Model</th><th>Params</th><th>Ant mean</th><th>Best run</th></tr></thead>
+          <tbody>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-gru)"></span>GRU (compact)</span></td>
+                <td class="num">51 K</td><td class="num">1,222</td><td class="num">1,921</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-gru)"></span>GRU (matched)</span></td>
+                <td class="num">312 K</td><td class="num win">1,422</td><td class="num win">2,354</td></tr>
+            <tr><td><span class="arch"><span class="swatch" style="background:var(--c-stu)"></span>STU (full)</span></td>
+                <td class="num">338 K</td><td class="num">1,001</td><td class="num">1,657</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:15px;margin-top:6px"><strong>GRU's advantage is genuinely architectural</strong> — and scales with capacity. The matched-param GRU set the <strong>highest return in the entire study</strong> (2,354 on Ant).</p>
+      </section>
+
+    </div>
+
+
+    <!-- ====================================== COLUMN 3 ====================================== -->
+    <div class="col">
+      <div class="col-head"><div class="nm">When Architecture Matters</div><div class="ix">03</div></div>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§3.1</span><h2>Memory Mechanism Taxonomy</h2></div>
+
+        <figure class="figure">
+          <svg class="fig-svg" viewBox="0 0 1000 380" xmlns="http://www.w3.org/2000/svg">
+            <text x="500" y="22" fill="#15171c" font-family="Inter,sans-serif" font-weight="800" font-size="17" text-anchor="middle">THREE KINDS OF MEMORY · THREE WINNERS</text>
+            <line x1="60" y1="36" x2="940" y2="36" stroke="#E77500" stroke-width="3"/>
+
+            <g transform="translate(40 60)">
+              <rect width="280" height="300" fill="#fff" stroke="#11202f" stroke-width="2"/>
+              <rect width="280" height="40" fill="#11202f"/>
+              <text x="140" y="27" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" text-anchor="middle">RETENTION</text>
+              <text x="140" y="68" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" text-anchor="middle">PROBE: T-MAZE</text>
+              <text x="140" y="100" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">Store &amp; maintain</text>
+              <text x="140" y="120" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">a signal over time</text>
+              <g transform="translate(50 140)">
+                <rect x="0" y="40" width="180" height="36" fill="#f3f5f8" stroke="#15171c"/>
+                <rect x="0" y="0"  width="36"  height="36" fill="#f3f5f8" stroke="#15171c"/>
+                <rect x="0" y="80" width="36"  height="36" fill="#f3f5f8" stroke="#15171c"/>
+                <text x="18" y="24" fill="#E77500" font-family="Inter,sans-serif" font-size="11" font-weight="800" text-anchor="middle">L</text>
+                <text x="18" y="104" fill="#7a8294" font-family="Inter,sans-serif" font-size="11" font-weight="800" text-anchor="middle">R</text>
+                <circle cx="160" cy="58" r="7" fill="#E77500"/>
+                <text x="100" y="32"  fill="#15171c" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle">"LEFT" hint</text>
+                <text x="100" y="104" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle">L=200 uninformative steps</text>
+              </g>
+              <text x="140" y="288" fill="#1f6f7a" font-family="Inter,sans-serif" font-weight="800" font-size="15" text-anchor="middle">BEST: GRU · LSTM</text>
+            </g>
+
+            <g transform="translate(360 60)">
+              <rect width="280" height="300" fill="#fff" stroke="#11202f" stroke-width="2"/>
+              <rect width="280" height="40" fill="#11202f"/>
+              <text x="140" y="27" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" text-anchor="middle">RECALL</text>
+              <text x="140" y="68" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" text-anchor="middle">PROBE: COPYTASK</text>
+              <text x="140" y="100" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">Retrieve specific</text>
+              <text x="140" y="120" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">items by content</text>
+              <g transform="translate(40 140)" font-family="JetBrains Mono,monospace" font-size="13">
+                <g>
+                  <rect x="0"  y="0" width="32" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="16" y="20" text-anchor="middle">A</text>
+                  <rect x="36" y="0" width="32" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="52" y="20" text-anchor="middle">C</text>
+                  <rect x="72" y="0" width="32" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="88" y="20" text-anchor="middle">F</text>
+                  <rect x="108" y="0" width="32" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="124" y="20" text-anchor="middle">B</text>
+                  <rect x="144" y="0" width="32" height="32" fill="#f3f5f8" stroke="#15171c"/><text x="160" y="20" text-anchor="middle">D</text>
+                </g>
+                <text x="100" y="56" text-anchor="middle" font-size="10" fill="#7a8294" letter-spacing="4">→ → GAP → →</text>
+                <g transform="translate(0 70)">
+                  <rect x="0"  y="0" width="32" height="32" fill="#fff5e8" stroke="#E77500" stroke-width="1.5"/><text x="16" y="20" text-anchor="middle">A</text>
+                  <rect x="36" y="0" width="32" height="32" fill="#fff5e8" stroke="#E77500" stroke-width="1.5"/><text x="52" y="20" text-anchor="middle">C</text>
+                  <rect x="72" y="0" width="32" height="32" fill="#fff5e8" stroke="#E77500" stroke-width="1.5"/><text x="88" y="20" text-anchor="middle">F</text>
+                  <rect x="108" y="0" width="32" height="32" fill="#fff5e8" stroke="#E77500" stroke-width="1.5"/><text x="124" y="20" text-anchor="middle">B</text>
+                  <rect x="144" y="0" width="32" height="32" fill="#fff5e8" stroke="#E77500" stroke-width="1.5"/><text x="160" y="20" text-anchor="middle">D</text>
+                </g>
+              </g>
+              <text x="140" y="288" fill="#b3361f" font-family="Inter,sans-serif" font-weight="800" font-size="15" text-anchor="middle">BEST: TRANSFORMER</text>
+            </g>
+
+            <g transform="translate(680 60)">
+              <rect width="280" height="300" fill="#fff" stroke="#11202f" stroke-width="2"/>
+              <rect width="280" height="40" fill="#11202f"/>
+              <text x="140" y="27" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="17" text-anchor="middle">INFERENCE</text>
+              <text x="140" y="68" fill="#7a8294" font-family="Inter,sans-serif" font-size="12" text-anchor="middle">PROBE: MUJOCO · METADRIVE</text>
+              <text x="140" y="100" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">Integrate observations</text>
+              <text x="140" y="120" fill="#15171c" font-family="Source Serif 4,serif" font-style="italic" font-size="17" text-anchor="middle">to estimate hidden state</text>
+              <g transform="translate(40 150)">
+                <path d="M0 60 Q 50 10 100 50 T 200 30" fill="none" stroke="#15171c" stroke-width="2"/>
+                <g fill="#1f6f7a">
+                  <circle cx="20" cy="55" r="3.5"/><circle cx="40" cy="44" r="3.5"/>
+                  <circle cx="60" cy="38" r="3.5"/><circle cx="80" cy="42" r="3.5"/>
+                  <circle cx="100" cy="48" r="3.5"/><circle cx="120" cy="46" r="3.5"/>
+                  <circle cx="140" cy="40" r="3.5"/><circle cx="160" cy="34" r="3.5"/>
+                  <circle cx="180" cy="32" r="3.5"/>
+                </g>
+                <text x="100" y="100" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="10" text-anchor="middle">obs history → velocity estimate</text>
+              </g>
+              <text x="140" y="270" fill="#1f6f7a" font-family="Inter,sans-serif" font-weight="800" font-size="14" text-anchor="middle">BEST: GRU (locomotion)</text>
+              <text x="140" y="290" fill="#6c4ab4" font-family="Inter,sans-serif" font-weight="800" font-size="14" text-anchor="middle">STU · TRANSFORMER (driving)</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 5.</b> Each architecture wins a different memory operation. There is <em>no universal best</em>.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§3.2</span><h2>Synthetic Probes · Hard Numbers</h2></div>
+
+        <figure class="figure">
+          <div class="fig-title">T-Maze · success rate (1.0 = perfect, 3 seeds)</div>
+          <table class="data" style="font-size:14px">
+            <thead>
+              <tr><th>L (gap)</th>
+                <th><span class="arch"><span class="swatch" style="background:var(--c-gru)"></span>GRU</span></th>
+                <th><span class="arch"><span class="swatch" style="background:var(--c-lstm)"></span>LSTM</span></th>
+                <th><span class="arch"><span class="swatch" style="background:var(--c-transformer)"></span>Transf.</span></th>
+                <th><span class="arch"><span class="swatch" style="background:var(--c-stu-t)"></span>STU-T</span></th></tr>
+            </thead>
+            <tbody>
+              <tr><td>10</td>  <td class="num win">1.00</td><td class="num win">1.00</td><td class="num win">1.00</td><td class="num lose">0.05</td></tr>
+              <tr><td>50</td>  <td class="num win">1.00</td><td class="num win">1.00</td><td class="num win">1.00</td><td class="num lose">0.05</td></tr>
+              <tr><td>100</td> <td class="num win">1.00</td><td class="num win">1.00</td><td class="num win">1.00</td><td class="num lose">0.05</td></tr>
+              <tr><td>200</td> <td class="num win">1.00</td><td class="num win">1.00</td><td class="num lose">0.05</td><td class="num lose">0.05</td></tr>
+            </tbody>
+          </table>
+          <div class="caption"><b>Figure 6.</b> GRU/LSTM hold the hint perfectly across all gaps; <b>Transformer collapses at L=200</b> as the corridor exceeds its window. STU-T fails everywhere — random.</div>
+        </figure>
+
+        <figure class="figure" style="margin-top:9px">
+          <div class="fig-title">CopyTask · score vs N (max = N, optimal teacher)</div>
+          <svg class="fig-svg" viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(60 22)">
+              <rect width="640" height="240" fill="#fafbfc" stroke="#d7d9de"/>
+              <g stroke="#e8eaee" stroke-width="1">
+                <line x1="0" y1="48"  x2="640" y2="48"/>
+                <line x1="0" y1="96"  x2="640" y2="96"/>
+                <line x1="0" y1="144" x2="640" y2="144"/>
+                <line x1="0" y1="192" x2="640" y2="192"/>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4a5160">
+                <text x="-8" y="244" text-anchor="end">0</text>
+                <text x="-8" y="196" text-anchor="end">5</text>
+                <text x="-8" y="148" text-anchor="end">10</text>
+                <text x="-8" y="100" text-anchor="end">15</text>
+                <text x="-8" y="52"  text-anchor="end">20</text>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4a5160">
+                <text x="0"   y="258" text-anchor="middle">N=5</text>
+                <text x="320" y="258" text-anchor="middle">N=10</text>
+                <text x="640" y="258" text-anchor="middle">N=20</text>
+              </g>
+              <polyline points="0,192 320,144 640,48" fill="none" stroke="#7a8294" stroke-width="1.5" stroke-dasharray="6 5"/>
+              <text x="540" y="34" fill="#7a8294" font-family="Inter,sans-serif" font-size="11" font-style="italic">y = N (max)</text>
+
+              <polyline points="0,202 320,154 640,109" fill="none" stroke="#1f6f7a" stroke-width="3.5"/>
+              <g fill="#1f6f7a"><circle cx="0" cy="202" r="5"/><circle cx="320" cy="154" r="5"/><circle cx="640" cy="109" r="5"/></g>
+              <polyline points="0,202 320,160 640,146" fill="none" stroke="#c47a00" stroke-width="3"/>
+              <g fill="#c47a00"><circle cx="0" cy="202" r="4"/><circle cx="320" cy="160" r="4"/><circle cx="640" cy="146" r="4"/></g>
+              <polyline points="0,205 320,144 640,59" fill="none" stroke="#b3361f" stroke-width="3.5"/>
+              <g fill="#b3361f"><circle cx="0" cy="205" r="5"/><circle cx="320" cy="144" r="5"/><circle cx="640" cy="59" r="5"/></g>
+              <polyline points="0,202 320,234 640,222" fill="none" stroke="#9aa1b1" stroke-width="3" stroke-dasharray="6 4"/>
+              <g fill="#9aa1b1"><circle cx="0" cy="202" r="4"/><circle cx="320" cy="234" r="4"/><circle cx="640" cy="222" r="4"/></g>
+
+              <g><rect x="494" y="42" width="148" height="20" fill="#b3361f"/>
+                <text x="568" y="57" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="11" text-anchor="middle">TRANSFORMER 18.84</text></g>
+              <g><rect x="494" y="92" width="148" height="20" fill="#1f6f7a"/>
+                <text x="568" y="107" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="11" text-anchor="middle">GRU 13.60</text></g>
+
+              <text x="320" y="284" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle">Sequence length N (tokens to copy)</text>
+              <text x="-38" y="120" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle" transform="rotate(-90 -38 120)">Score (correct tokens, max = N)</text>
+            </g>
+          </svg>
+          <div class="legend">
+            <span class="item"><span class="dot" style="background:#b3361f"></span>Transformer</span>
+            <span class="item"><span class="dot" style="background:#1f6f7a"></span>GRU</span>
+            <span class="item"><span class="dot" style="background:#c47a00"></span>LSTM</span>
+            <span class="item"><span class="dot" style="background:#9aa1b1"></span>STU-T</span>
+            <span class="item"><span class="dash"></span>perfect = N</span>
+          </div>
+          <div class="caption"><b>Figure 7.</b> As <em>N</em> grows, attention pulls away. <b>Transformer 18.84/20</b> at N=20 — content-addressable lookup is the right primitive for recall.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§3.3</span><h2>Data Efficiency · CopyTask N=10</h2></div>
+        <figure class="figure">
+          <div class="fig-title">Score vs demo budget (3 seeds)</div>
+          <table class="data" style="font-size:13px">
+            <thead><tr><th>Budget</th><th>GRU</th><th>LSTM</th><th>Transf.</th><th>STU-T</th></tr></thead>
+            <tbody>
+              <tr><td>5</td>     <td class="num">1.41</td><td class="num">1.41</td><td class="num">1.31</td><td class="num lose">1.10</td></tr>
+              <tr><td>50</td>    <td class="num">2.21</td><td class="num">2.32</td><td class="num win">2.54</td><td class="num lose">1.07</td></tr>
+              <tr><td>250</td>   <td class="num">5.30</td><td class="num">4.83</td><td class="num win">6.87</td><td class="num lose">1.19</td></tr>
+              <tr><td>1000</td>  <td class="num win">9.00</td><td class="num">7.85</td><td class="num win">9.00</td><td class="num lose">1.16</td></tr>
+            </tbody>
+          </table>
+          <div class="caption"><b>Figure 8.</b> Even <b>5 demos</b> get GRU/LSTM to ≈30% of perfect on a recall task. Transformer overtakes once budget ≥ 50.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§3.4</span><h2>LDS Replication · Spectral Models</h2></div>
+        <figure class="figure">
+          <div class="fig-title">MSE vs spectral radius (16 seeds, lower is better)</div>
+          <svg class="fig-svg" viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(60 22)">
+              <rect width="640" height="240" fill="#fafbfc" stroke="#d7d9de"/>
+              <g stroke="#e8eaee" stroke-width="1">
+                <line x1="0" y1="0"   x2="640" y2="0"/>
+                <line x1="0" y1="80"  x2="640" y2="80"/>
+                <line x1="0" y1="160" x2="640" y2="160"/>
+                <line x1="0" y1="240" x2="640" y2="240"/>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4a5160">
+                <text x="-8" y="6"   text-anchor="end">10⁻¹</text>
+                <text x="-8" y="86"  text-anchor="end">10⁻²</text>
+                <text x="-8" y="166" text-anchor="end">10⁻³</text>
+                <text x="-8" y="244" text-anchor="end">10⁻⁴</text>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4a5160">
+                <text x="0"   y="258" text-anchor="middle">0.90</text>
+                <text x="160" y="258" text-anchor="middle">0.92</text>
+                <text x="320" y="258" text-anchor="middle">0.94</text>
+                <text x="480" y="258" text-anchor="middle">0.96</text>
+                <text x="640" y="258" text-anchor="middle">1.00</text>
+              </g>
+              <polyline points="0,180 80,175 160,170 240,160 320,150 400,140 480,130 560,120 640,114"
+                        fill="none" stroke="#6c4ab4" stroke-width="3.5"/>
+              <polyline points="0,120 80,115 160,108 240,100 320,90 400,85 480,78 560,70 640,62"
+                        fill="none" stroke="#1f6f7a" stroke-width="3"/>
+              <polyline points="0,100 80,95 160,88 240,80 320,72 400,66 480,58 560,50 640,42"
+                        fill="none" stroke="#c47a00" stroke-width="3"/>
+              <polyline points="0,75 80,72 160,68 240,60 320,52 400,45 480,38 560,32 640,26"
+                        fill="none" stroke="#b3361f" stroke-width="3"/>
+              <polyline points="0,18 80,16 160,14 240,18 320,16 400,14 480,16 560,18 640,16"
+                        fill="none" stroke="#9aa1b1" stroke-width="3" stroke-dasharray="6 4"/>
+
+              <g><rect x="500" y="124" width="138" height="20" fill="#6c4ab4"/>
+                <text x="569" y="139" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="11" text-anchor="middle">FULL STU · 0.0004</text></g>
+              <g><rect x="448" y="-2" width="186" height="20" fill="#9aa1b1"/>
+                <text x="541" y="13" fill="#fff" font-family="Inter,sans-serif" font-weight="800" font-size="11" text-anchor="middle">STU-T (TENSORDOT) · 52× WORSE</text></g>
+
+              <text x="320" y="284" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle">Spectral radius (largest |eigenvalue| of A)</text>
+              <text x="-38" y="120" fill="#15171c" font-family="Inter,sans-serif" font-weight="700" font-size="15" text-anchor="middle" transform="rotate(-90 -38 120)">MSE — next-state prediction (log scale)</text>
+            </g>
+          </svg>
+          <div class="legend">
+            <span class="item"><span class="dot" style="background:#6c4ab4"></span>STU (full)</span>
+            <span class="item"><span class="dot" style="background:#1f6f7a"></span>GRU</span>
+            <span class="item"><span class="dot" style="background:#c47a00"></span>LSTM</span>
+            <span class="item"><span class="dot" style="background:#b3361f"></span>Transformer</span>
+            <span class="item"><span class="dot" style="background:#9aa1b1"></span>STU-T</span>
+          </div>
+          <div class="caption"><b>Figure 9.</b> <span class="resulttag warn">UNREPORTED</span> Flash-STU's tensordot variant is <b>52× worse than published</b> at <span class="kbd">d=64</span>. Full STU is <b>12× better than GRU</b>.</div>
+        </figure>
+        <p style="font-size:15px;margin-top:6px"><strong>Practical contraindication:</strong> below <span class="kbd">d_model = 128</span>, the “efficient” tensordot variant is essentially random on every distillation task — surfaced here for the first time.</p>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§3.5</span><h2>Architecture × Task Winner Matrix</h2></div>
+        <figure class="figure">
+          <div class="fig-title">Per-task best architecture (green = top-1, amber = within 5%)</div>
+          <svg class="fig-svg" viewBox="0 0 1000 350" xmlns="http://www.w3.org/2000/svg">
+            <g font-family="Inter,sans-serif" font-size="12" fill="#15171c">
+              <!-- header row -->
+              <g transform="translate(220 0)">
+                <rect x="0"   y="0" width="156" height="44" fill="#11202f"/>
+                <rect x="156" y="0" width="156" height="44" fill="#11202f"/>
+                <rect x="312" y="0" width="156" height="44" fill="#11202f"/>
+                <rect x="468" y="0" width="156" height="44" fill="#11202f"/>
+                <rect x="624" y="0" width="156" height="44" fill="#11202f"/>
+                <text x="78"  y="20" fill="#fff" font-weight="800" text-anchor="middle">GRU</text>
+                <text x="234" y="20" fill="#fff" font-weight="800" text-anchor="middle">LSTM</text>
+                <text x="390" y="20" fill="#fff" font-weight="800" text-anchor="middle">Transf.</text>
+                <text x="546" y="20" fill="#fff" font-weight="800" text-anchor="middle">STU</text>
+                <text x="702" y="20" fill="#fff" font-weight="800" text-anchor="middle">MLP</text>
+                <text x="78"  y="36" fill="#9aa1b1" font-size="10" text-anchor="middle">51 K</text>
+                <text x="234" y="36" fill="#9aa1b1" font-size="10" text-anchor="middle">68 K</text>
+                <text x="390" y="36" fill="#9aa1b1" font-size="10" text-anchor="middle">232 K</text>
+                <text x="546" y="36" fill="#9aa1b1" font-size="10" text-anchor="middle">338 K</text>
+                <text x="702" y="36" fill="#9aa1b1" font-size="10" text-anchor="middle">5 K</text>
+              </g>
+
+              <g font-family="Inter,sans-serif" font-weight="700" font-size="13">
+                <text x="14" y="74">HalfCheetah</text>
+                <text x="14" y="124">Ant</text>
+                <text x="14" y="174">MetaDrive</text>
+                <text x="14" y="224">T-Maze (L=200)</text>
+                <text x="14" y="274">CopyTask (N=20)</text>
+                <text x="14" y="324">LDS replication</text>
+              </g>
+
+              <!-- HalfCheetah -->
+              <g transform="translate(220 56)">
+                <rect x="0" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="78" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 1,422</text>
+                <rect x="156" y="0" width="156" height="36" fill="#fff1d8" stroke="#fff" stroke-width="3"/><text x="234" y="22" font-weight="700" fill="#B85C00" text-anchor="middle">1,238</text>
+                <rect x="312" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="390" y="22" text-anchor="middle">858</text>
+                <rect x="468" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="546" y="22" text-anchor="middle">496</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">−180</text>
+              </g>
+              <!-- Ant -->
+              <g transform="translate(220 106)">
+                <rect x="0" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="78" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 1,222</text>
+                <rect x="156" y="0" width="156" height="36" fill="#fff1d8" stroke="#fff" stroke-width="3"/><text x="234" y="22" font-weight="700" fill="#B85C00" text-anchor="middle">1,108</text>
+                <rect x="312" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="390" y="22" text-anchor="middle">1,066</text>
+                <rect x="468" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="546" y="22" text-anchor="middle">1,001</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">115</text>
+              </g>
+              <!-- MetaDrive -->
+              <g transform="translate(220 156)">
+                <rect x="0" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="78" y="22" text-anchor="middle">61.5</text>
+                <rect x="156" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="234" y="22" text-anchor="middle">70.0</text>
+                <rect x="312" y="0" width="156" height="36" fill="#fff1d8" stroke="#fff" stroke-width="3"/><text x="390" y="22" font-weight="700" fill="#B85C00" text-anchor="middle">73.7</text>
+                <rect x="468" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="546" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 75.4</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">16.4</text>
+              </g>
+              <!-- T-Maze -->
+              <g transform="translate(220 206)">
+                <rect x="0" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="78" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 1.00</text>
+                <rect x="156" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="234" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 1.00</text>
+                <rect x="312" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="390" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">0.05</text>
+                <rect x="468" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="546" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">0.05</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">0.05</text>
+              </g>
+              <!-- CopyTask -->
+              <g transform="translate(220 256)">
+                <rect x="0" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="78" y="22" text-anchor="middle">13.60</text>
+                <rect x="156" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="234" y="22" text-anchor="middle">10.48</text>
+                <rect x="312" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="390" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle">★ 18.84</text>
+                <rect x="468" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="546" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">1.16</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle">1.04</text>
+              </g>
+              <!-- LDS -->
+              <g transform="translate(220 306)">
+                <rect x="0" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="78" y="22" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11">5.0e-3</text>
+                <rect x="156" y="0" width="156" height="36" fill="#f3f5f8" stroke="#fff" stroke-width="3"/><text x="234" y="22" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11">2.6e-3</text>
+                <rect x="312" y="0" width="156" height="36" fill="#fff1d8" stroke="#fff" stroke-width="3"/><text x="390" y="22" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#B85C00" font-weight="700">1.0e-3</text>
+                <rect x="468" y="0" width="156" height="36" fill="#dff0d8" stroke="#fff" stroke-width="3"/><text x="546" y="22" font-weight="800" fill="#2f7a44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11">★ 4e-4</text>
+                <rect x="624" y="0" width="156" height="36" fill="#f8e0db" stroke="#fff" stroke-width="3"/><text x="702" y="22" fill="#b3361f" font-weight="700" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11">2.1e-2</text>
+              </g>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 10.</b> No architecture wins everywhere. <b>GRU dominates locomotion + retention</b>; <b>STU dominates spatial driving + LDS</b>; <b>Transformer dominates recall</b>. The right tool depends on the memory operation, not the field.</div>
+        </figure>
+      </section>
+
+    </div>
+
+
+    <!-- ====================================== COLUMN 4 ====================================== -->
+    <div class="col">
+      <div class="col-head"><div class="nm">Driving · Deployment · Recommendations</div><div class="ix">04</div></div>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§4.1</span><h2>MetaDrive · Spatial Story Flips</h2></div>
+        <p>On <strong>MetaDrive</strong> — autonomous driving with 72-laser lidar (91-dim) — the locomotion ranking <em>flips</em>. Recurrent students struggle through complex intersections; <strong>STU and Transformer</strong> exploit spatial geometry directly.</p>
+        <figure class="figure">
+          <div class="fig-title">Mean episode reward (points / episode) · MetaDrive (5 seeds)</div>
+          <svg class="fig-svg" viewBox="0 0 1000 316" xmlns="http://www.w3.org/2000/svg">
+            <g font-family="Inter,sans-serif" font-size="14">
+              <g stroke="#eef0f4" stroke-width="1">
+                <line x1="280" y1="20" x2="280" y2="300"/>
+                <line x1="440" y1="20" x2="440" y2="300"/>
+                <line x1="600" y1="20" x2="600" y2="300"/>
+                <line x1="760" y1="20" x2="760" y2="300"/>
+                <line x1="920" y1="20" x2="920" y2="300"/>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="12" fill="#4a5160" text-anchor="middle">
+                <text x="280" y="312">0</text><text x="440" y="312">25</text>
+                <text x="600" y="312">50</text><text x="760" y="312">75</text><text x="920" y="312">100</text>
+              </g>
+
+              <text x="270" y="48" text-anchor="end" fill="#15171c" font-weight="700">STU</text>
+              <rect x="280" y="32" width="611" height="26" fill="#6c4ab4"/>
+              <text x="900" y="50" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">75.4</text>
+
+              <text x="270" y="98" text-anchor="end" fill="#15171c" font-weight="700">Transformer</text>
+              <rect x="280" y="82" width="568" height="26" fill="#b3361f"/>
+              <text x="858" y="100" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">73.7</text>
+
+              <text x="270" y="148" text-anchor="end" fill="#15171c" font-weight="700">LSTM</text>
+              <rect x="280" y="132" width="448" height="26" fill="#c47a00"/>
+              <text x="738" y="150" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">70.0</text>
+
+              <text x="270" y="198" text-anchor="end" fill="#15171c" font-weight="700">GRU</text>
+              <rect x="280" y="182" width="394" height="26" fill="#1f6f7a"/>
+              <text x="684" y="200" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">61.5</text>
+
+              <text x="270" y="248" text-anchor="end" fill="#15171c" font-weight="700">STU-T</text>
+              <rect x="280" y="232" width="160" height="26" fill="#9aa1b1"/>
+              <text x="450" y="250" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">25.0</text>
+
+              <text x="270" y="298" text-anchor="end" fill="#15171c" font-weight="700">MLP (no memory)</text>
+              <rect x="280" y="282" width="105" height="26" fill="#4a5160"/>
+              <text x="395" y="300" fill="#fff" font-family="JetBrains Mono,monospace" font-size="13" text-anchor="end">16.4</text>
+
+              <g stroke="#E77500" stroke-width="2" fill="none">
+                <path d="M905 26 L935 26 L935 112 L905 112"/>
+              </g>
+              <text x="950" y="76" fill="#E77500" font-family="Inter,sans-serif" font-weight="800" font-size="12">SPATIAL</text>
+              <text x="950" y="92" fill="#E77500" font-family="Inter,sans-serif" font-weight="800" font-size="12">WINS</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 11.</b> STU (75.4) and Transformer (73.7) lead on lidar-rich MetaDrive; GRU (68.7) drops to mid-pack — observation structure changes the right tool.</div>
+        </figure>
+        <figure class="figure tight" style="margin-top:8px">
+          <div class="fig-title">Rollout traces · 6 architectures × 5 scenarios</div>
+          <div class="md-grid" style="grid-template-rows:auto 1fr">
+            <div class="corner"></div>
+            <div class="colhdr">
+              <div>Straight</div><div>T-junction</div><div>4-way</div><div>Ramp</div><div>Roundabout</div>
+            </div>
+            <div class="rowhdr" style="grid-template-rows:repeat(3, 1fr)">
+              <div style="background:#c47a00">LSTM</div>
+              <div style="background:#6c4ab4">STU</div>
+              <div style="background:#b3361f">Transf.</div>
+            </div>
+            <div class="img-wrap"><img src="assets/comparison_metadrive_3arch.png" alt="MetaDrive rollout traces — LSTM, STU, Transformer"/></div>
+          </div>
+          <div class="caption"><b>Figure 12.</b> Three key architectures across five road types. <b>STU and Transformer</b> negotiate branches and roundabouts; <b>LSTM</b> hesitates at complex geometry.</div>
+        </figure>
+      </section>
+
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§4.2</span><h2>Best Rollouts · MuJoCo</h2></div>
+        <figure class="figure tight">
+          <div class="render-strip">
+            <div class="row">
+              <div class="lab"><span class="arch">HalfCheetah · GRU (best)</span><span class="ret">return ≈ 1,401 · 500 steps</span></div>
+              <img src="assets/RENDER_halfcheetah_best_frames.png" alt="HalfCheetah GRU running cleanly across 8 sampled frames"/>
+            </div>
+            <div class="row">
+              <div class="lab"><span class="arch">Ant · GRU (best)</span><span class="ret">return ≈ 1,783 · stable gait</span></div>
+              <img src="assets/RENDER_ant_best_frames.png" alt="Ant GRU running"/>
+            </div>
+          </div>
+          <div class="caption"><b>Figure 13.</b> Best-of-sweep students. GRU develops stable gaits on both bodies; worst students (Transformer on HalfCheetah, STU on Ant) stall or fall — see paper appendix.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§4.3</span><h2>JEPA Auxiliary Loss · Null</h2></div>
+        <p style="font-size:15px">We tested a <strong>JEPA</strong> predictive auxiliary loss (predict teacher's future hidden state) across all architectures, environments, and a 6-value λ sweep. <strong>No consistent benefit found.</strong> MSE = 0.1053 at every λ; MuJoCo Δ ranges −4.5% to +5.7%. <em>Skip JEPA for policy distillation.</em></p>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§4.4</span><h2>Edge Deployment</h2></div>
+        <figure class="figure">
+          <div class="fig-title">Inference latency — milliseconds per environment step (lower = better)</div>
+          <svg class="fig-svg" viewBox="0 0 1000 198" xmlns="http://www.w3.org/2000/svg">
+            <g font-family="Inter,sans-serif" font-size="13">
+              <g stroke="#eef0f4" stroke-width="1">
+                <line x1="200" y1="10" x2="200" y2="188"/>
+                <line x1="350" y1="10" x2="350" y2="188"/>
+                <line x1="500" y1="10" x2="500" y2="188"/>
+                <line x1="650" y1="10" x2="650" y2="188"/>
+                <line x1="800" y1="10" x2="800" y2="188"/>
+                <line x1="950" y1="10" x2="950" y2="188"/>
+              </g>
+              <g font-family="JetBrains Mono,monospace" font-size="11" fill="#4a5160" text-anchor="middle">
+                <text x="200" y="196">0</text><text x="350" y="196">1</text>
+                <text x="500" y="196">2</text><text x="650" y="196">3</text>
+                <text x="800" y="196">4</text><text x="950" y="196">5</text>
+              </g>
+
+              <text x="190" y="32" text-anchor="end" fill="#15171c" font-weight="700">SpectraLDS</text>
+              <rect x="200" y="16" width="32" height="22" fill="#2f7a44"/>
+              <text x="240" y="32" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="12">0.21 ms · 238K</text>
+
+              <text x="190" y="62" text-anchor="end" fill="#15171c" font-weight="700">MLP</text>
+              <rect x="200" y="46" width="15" height="22" fill="#4a5160"/>
+              <text x="225" y="62" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="12">0.10 ms · 5K</text>
+
+              <text x="190" y="92" text-anchor="end" fill="#15171c" font-weight="700">GRU</text>
+              <rect x="200" y="76" width="189" height="22" fill="#1f6f7a"/>
+              <text x="397" y="92" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="12">1.26 ms · 51K</text>
+
+              <text x="190" y="122" text-anchor="end" fill="#15171c" font-weight="700">LSTM</text>
+              <rect x="200" y="106" width="200" height="22" fill="#c47a00"/>
+              <text x="408" y="122" fill="#15171c" font-family="JetBrains Mono,monospace" font-size="12">1.33 ms · 68K</text>
+
+              <text x="190" y="152" text-anchor="end" fill="#15171c" font-weight="700">Transformer</text>
+              <rect x="200" y="136" width="504" height="22" fill="#b3361f"/>
+              <text x="712" y="152" fill="#fff" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="end" dx="-8">3.36 ms</text>
+
+              <text x="190" y="182" text-anchor="end" fill="#15171c" font-weight="700">STU (full)</text>
+              <rect x="200" y="166" width="657" height="22" fill="#6c4ab4"/>
+              <text x="865" y="182" fill="#fff" font-family="JetBrains Mono,monospace" font-size="12" text-anchor="end" dx="-8">4.38 ms</text>
+
+              <g stroke="#2f7a44" stroke-width="2" fill="none">
+                <path d="M232 27 Q 600 27 870 175"/>
+                <path d="M860 165 L870 175 L860 180" stroke-width="2"/>
+              </g>
+              <text x="500" y="22" fill="#2f7a44" font-family="Inter,sans-serif" font-weight="800" font-size="14" text-anchor="middle">SpectraLDS conversion · 16.3× faster than full STU</text>
+              <text x="500" y="36" fill="#2f7a44" font-family="Inter,sans-serif" font-size="11" text-anchor="middle">0.04% reconstruction error · drop-in for trained spectral students</text>
+            </g>
+          </svg>
+          <div class="caption"><b>Figure 14.</b> Convert a trained full-STU student to <b>SpectraLDS</b> at deploy time: <b>16.3× speedup</b> with 0.04% reconstruction error. Recurrent students remain Pareto-optimal at the small end; spectral wins after conversion.</div>
+        </figure>
+      </section>
+
+      <section class="section">
+        <div class="playbook-feature">
+          <div class="ribbon">Practical Recommendations</div>
+          <h2>What to do</h2>
+          <ol>
+            <li><b>Invest in teacher quality first.</b> 4–16× more impact than the architecture choice.</li>
+            <li><b>GRU for locomotion &amp; control.</b> 51K · 1.26 ms — Pareto-optimal in our sweep.</li>
+            <li><b>Transformer for content recall.</b> If the task is "remember <em>which</em>," use attention.</li>
+            <li><b>STU / Transformer for spatial inputs</b> — lidar, radar, occupancy grids.</li>
+            <li><b>Use full STU below d_model = 128.</b> The "efficient" tensordot path is silently random.</li>
+            <li><b>Skip JEPA auxiliary losses.</b> No consistent benefit found.</li>
+            <li><b>Convert to SpectraLDS at deploy.</b> 16.3× speedup for spectral students.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="num">§4.6</span><h2>Limitations · Future Work</h2></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:13px;color:var(--orange-d);letter-spacing:.12em;margin-bottom:4px">LIMITATIONS</div>
+            <ul class="bullets" style="font-size:14px">
+              <li>Single MuJoCo teacher seed (42).</li>
+              <li>3 student seeds (5 on key conditions).</li>
+              <li>Compact only — <span class="kbd">d_model=64</span>.</li>
+              <li>Param-matched: GRU₁₆₀ (312K) outperforms STU (338K).</li>
+              <li>Offline BC; DAgger untested.</li>
+              <li>SpectraLDS not tested end-to-end on a distilled student.</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:13px;color:var(--orange-d);letter-spacing:.12em;margin-bottom:4px">FUTURE</div>
+            <ul class="bullets" style="font-size:14px">
+              <li>Episode-length-normalized BC ablation.</li>
+              <li>Multi-seed teachers.</li>
+              <li><span class="kbd">d_model</span> sweep 64 → 256.</li>
+              <li>Pixel-based POMDPs.</li>
+              <li>Mamba state-space baseline.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+</article>
+</div>
+
+<script>
+  (function(){
+    const stage  = document.getElementById('stage');
+    const poster = document.getElementById('poster');
+    const W = 4608, H = 3456;
+    function fit(){
+      const sw = stage.clientWidth, sh = stage.clientHeight;
+      const s = Math.min(sw/W, sh/H);
+      const tx = (sw - W*s)/2;
+      const ty = (sh - H*s)/2;
+      poster.style.transform = 'translate('+tx+'px,'+ty+'px) scale('+s+')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+  })();
+</script>
+</body>
+</html>

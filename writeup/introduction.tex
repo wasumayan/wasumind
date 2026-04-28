@@ -1,0 +1,42 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+Training a reinforcement learning agent to walk, drive, or manipulate objects often produces a model too large and slow for real-time deployment on constrained hardware.
+The standard solution is \emph{policy distillation}: record the large ``teacher'' model doing its job, then train a tiny ``student'' to imitate those demonstrations via behavioral cloning~\citep{hinton2015distilling, rusu2016policy}.
+The student must be small enough to run at the edge, but capable enough to reproduce the teacher's behavior---including handling partial observability, where it must infer hidden information (like velocity) from a history of observations.
+
+This creates a design decision that practitioners invest significant effort in: \emph{which temporal architecture should the student use?}
+GRU~\citep{cho2014gru} and LSTM~\citep{hochreiter1997lstm} compress history into a fixed-size hidden state and dominate memory benchmarks in RL~\citep{morad2023popgym}.
+Transformers~\citep{chen2021decision} use attention to directly look up relevant past observations by content.
+Spectral models like STU~\citep{agarwal2024spectral, liu2025flashstu} convolve inputs with mathematically optimal frequency filters derived from a Hankel matrix, with provable approximation guarantees for linear dynamical systems.
+Each comes with compelling theoretical arguments.
+But there is a deeper question these arguments sidestep: \emph{in distillation, does the choice of student architecture actually matter---or is it the quality of the teacher's demonstrations that determines success?}
+
+The distinction matters because distillation is fundamentally different from RL.
+In RL, the agent must \emph{discover} good behavior through exploration---and the architecture's inductive bias determines how efficiently it explores and assigns credit.
+In distillation, good behavior is \emph{given} directly in the demonstrations.
+The architecture's job reduces to supervised function approximation: given this sequence of observations, produce this action.
+\citet{busbridge2025distillation} showed that teacher quality predicts student quality in language model distillation, and~\citet{belkhale2023data} found that data quality dominates other factors in imitation learning for manipulation.
+If these findings extend to sequential decision-making under partial observability---where the student must additionally handle temporal memory---then the research community may be optimizing the wrong variable.
+
+We test this directly.
+Across synthetic memory benchmarks, MuJoCo locomotion POMDPs with imperfect teachers at 8 quality levels, and MetaDrive autonomous driving, we run over 500 experiments and find a clear answer: \textbf{teacher quality explains far more variance in student performance than architecture choice.}
+A two-way ANOVA attributes $49$--$72\%$ of student return variance to teacher quality and only $5$--$14\%$ to architecture.
+The teacher is the signal; the architecture is just the antenna.
+
+But the story is more nuanced than ``architecture doesn't matter.''
+A substantial interaction effect ($17$--$25\%$) reveals that architecture matters \emph{more} when teachers are poor---precisely the regime where practitioners most need guidance.
+And the \emph{type} of memory a task demands determines which architecture wins: recurrent gating for retention, attention for content-addressable recall, and task-dependent rankings for temporal inference (GRU for locomotion, STU/Transformer for driving).
+We also document that the Flash STU tensordot approximation---designed for parameter efficiency---fails catastrophically at compact model scales, a finding unreported in prior work.
+A parameter-matched comparison confirms GRU's robustness on locomotion is architectural, not a capacity artifact.
+And students frequently exceed their imperfect teachers, likely because behavioral cloning's loss structure implicitly upweights successful demonstrations.
+
+\paragraph{Contributions.}
+\begin{enumerate}[nosep]
+  \item \textbf{Teacher quality dominates architecture choice} across the ranges we tested ($\eta^2$ ratio of $4.1$--$15.6\times$ on three environments). At matched parameter counts, GRU outperforms STU, confirming the advantage is architectural.
+  \item \textbf{Memory mechanism categorization:} retention (recurrent models), recall (Transformer), inference (task-dependent). Architecture ranking is conditional on task type, not universal.
+  \item \textbf{STU-T tensordot failure at compact scale:} $52\times$ higher MSE than published, random-level on all distillation tasks. Full STU achieves the best sequence prediction. Unreported in prior work.
+  \item \textbf{Students frequently exceed imperfect teachers} via variance averaging and implicit timestep weighting---a proposed mechanism requiring causal testing.
+\end{enumerate}
+
+\paragraph{Scope.} All results are bounded by specific design choices: compact models ($d_\text{model}=64$, $\leq 338$K params), a single LSTM-based teacher family, offline behavioral cloning with MSE loss, four temporal architectures plus two feedforward baselines, and three environment families.

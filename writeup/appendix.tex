@@ -1,0 +1,121 @@
+\begingroup
+\singlespacing
+\chapter{Hyperparameters and Implementation Details}
+\label{app:hyperparams}
+
+\section{Software}
+
+All experiments use Python 3.12, PyTorch 2.x (CUDA 12.1), stable-baselines3 2.3.2, sb3-contrib 2.3.2, Gymnasium 0.29+, and MuJoCo 3.7.
+Spectral filter computation uses \texttt{torch.linalg.eigh} in float64; all other computation is float32.
+
+\section{Compute}
+
+Experiments ran on Princeton Della (A100 GPUs) and Adroit (A100 MIG 20GB) HPC clusters.
+Teacher training: 2--4 hours per 2M steps.
+Student distillation: 5--30 minutes per model.
+Total compute: approximately 200 A100 GPU-hours.
+
+\section{Teacher Training}
+
+Teachers were trained using RecurrentPPO from the sb3-contrib library with the hyperparameters in Table~A.1.
+Each teacher was trained for 2M timesteps with checkpoints saved at 200K, 500K, 1M, and 2M steps.
+Teacher evaluation used 20 deterministic rollouts per checkpoint.
+All MuJoCo teachers used a single seed (42) for the distillation sweep; a second seed (123) was trained but not used in the main results, which is acknowledged as a limitation.
+
+\begin{table}[ht]
+\centering
+\caption{RecurrentPPO teacher hyperparameters.}
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Algorithm & RecurrentPPO (sb3-contrib) \\
+Policy & MlpLstmPolicy \\
+LSTM hidden size & 128 \\
+Total timesteps & 2{,}000{,}000 \\
+Learning rate & $3 \times 10^{-4}$ \\
+Batch size & 64 \\
+n\_steps & 2048 \\
+n\_epochs & 10 \\
+$\gamma$ & 0.99 \\
+GAE $\lambda$ & 0.95 \\
+Clip range & 0.2 \\
+Seeds & 42, 123 \\
+Checkpoints & 200K, 500K, 1M, 2M steps \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Student Distillation}
+
+Student training used behavioral cloning with MSE loss on actions, with the hyperparameters in Table~A.2.
+Each student was trained for up to 100 epochs with early stopping (patience 10 on validation loss).
+Demonstrations were chunked into overlapping windows of 256 timesteps for batched training.
+Evaluation used 20 rollouts in the POMDP environment per seed.
+
+\begin{table}[ht]
+\centering
+\caption{Student distillation hyperparameters.}
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+$d_\text{model}$ & 64 (312K-matched: 160) \\
+Number of layers & 2 \\
+Spectral filters (STU) & 16 \\
+Optimizer & AdamW \\
+Weight decay & 0.01 \\
+Learning rate & $3 \times 10^{-4}$ \\
+Schedule & Cosine annealing \\
+Epochs & 100 (early stopping, patience 10) \\
+Batch size & 64 \\
+Sequence window & 256 steps \\
+Gradient clipping & 1.0 \\
+Demonstration episodes & 500 \\
+Train/val split & 80/20 \\
+Evaluation episodes & 20 \\
+Seeds & 42, 123, 456 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Student Architecture Details}
+
+Table~A.3 provides detailed parameter counts, model sizes, and inference latency for all architectures at $d_\text{model}=64$ on HalfCheetah-POMDP (obs=8, act=6).
+Latency was measured on an Apple M2 Max CPU for single-timestep inference.
+For deployment on actual edge hardware (e.g., Jetson Nano, Raspberry Pi), latencies would differ; the M2 Max numbers serve as a standardized reference for relative comparison.
+
+\begin{table}[ht]
+\centering
+\caption{Detailed student model comparison at $d_\text{model}=64$, 2 layers (HalfCheetah-POMDP, obs=8, act=6). Latency measured on Apple M2 Max CPU, single-timestep inference.}
+\begin{tabular}{lrrrr}
+\toprule
+Architecture & Parameters & Size (KB) & Latency (ms) & Throughput (steps/s) \\
+\midrule
+MLP           & 5{,}126 & 20 & 0.10 & 10{,}000 \\
+FrameStack    & 8{,}710 & 34 & 0.20 & 5{,}000 \\
+GRU           & 50{,}886 & 199 & 1.26 & 796 \\
+LSTM          & 67{,}526 & 264 & 1.33 & 751 \\
+GRU$_{160}$   & 311{,}526 & 1{,}217 & 2.80 & 357 \\
+Transformer   & 232{,}006 & 906 & 3.36 & 297 \\
+STU (full)    & 338{,}118 & 1{,}321 & 4.38 & 228 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Spectral Filter Computation}
+
+The STU's fixed convolutional filters are derived from the top eigenvectors of a Hankel matrix, following \citet{agarwal2024spectral}.
+The Hankel matrix is defined as $Z_{ij} = \frac{2}{(i+j)^3 - (i+j)}$ for $i,j \in \{1, \ldots, L\}$.
+We extract the top-$K$ eigenvectors via \texttt{torch.linalg.eigh} in float64 (ascending eigenvalues, reversed) and scale each by $\lambda_k^{1/4}$.
+When the sequence length $L < K$, we clamp $K = \min(K, L)$.
+
+\section{Data Efficiency Experiments}
+
+To test how quickly each architecture learns from limited demonstrations, we sweep over demonstration budgets of $\{5, 10, 25, 50, 100, 250, 1000\}$ episodes on both CopyTask ($N{=}10$) and T-Maze ($L{=}100$), with 3 seeds per condition.
+Results are reported in \cref{fig:synthetic-summary}c and the accompanying text in \cref{sec:synthetic}.
+
+\section{Code and Reproducibility}
+
+All code, experiment scripts, and trained checkpoints are available at \url{https://github.com/wasumayan/wasumind}.
+\endgroup

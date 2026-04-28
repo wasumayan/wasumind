@@ -1,0 +1,18 @@
+\begin{abstract}
+
+Deploying reinforcement learning agents on resource-constrained hardware requires compressing large teacher policies into compact students via behavioral cloning.
+A practitioner must choose a student architecture---GRU, LSTM, Transformer, or spectral state space models---but it is unclear how much this choice matters relative to the quality of the teacher's demonstrations.
+
+We study this question systematically, comparing four temporal architectures and two feedforward baselines across synthetic memory tasks, MuJoCo locomotion POMDPs, and MetaDrive autonomous driving, with over 500 experiments.
+Our central finding is that a better teacher helps far more than a fancier architecture.
+In a variance decomposition across all experiments, how good the teacher is explains $49$--$72\%$ of the difference in student performance, while architecture choice explains only $5$--$14\%$.
+But architecture is not irrelevant: when the teacher is bad, architecture matters much more ($17$--$25\%$ interaction effect)---so the one time you most need to pick the right architecture is exactly when your training data is worst.
+
+Architecture does matter in specific ways.
+Recurrent models solve retention tasks perfectly; Transformers dominate content-addressable recall; and the best architecture for temporal inference depends on the task---GRU leads on MuJoCo locomotion, but STU and Transformer lead on MetaDrive autonomous driving, where lidar-rich observations favor spatial processing over compact recurrence.
+A parameter-matched comparison confirms GRU's locomotion advantage is architectural, not capacity-driven.
+We also document that the Flash STU tensordot approximation fails catastrophically at compact model scales, a finding unreported in prior work.
+
+All code and results: \url{https://github.com/wasumayan/wasumind}.
+
+\end{abstract}
